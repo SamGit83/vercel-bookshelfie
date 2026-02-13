@@ -12,7 +12,7 @@ export default function Home() {
       </header>
       <main>
         <p>Welcome to Bookshelfie, the ultimate iOS app for tracking your reading journey. Organize your books, track your progress, and discover new reads.</p>
-        <a href="https://apps.apple.com/app/bookshelfie/id1234567890" target="_blank" rel="noopener noreferrer">
+        <a href="https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB" target="_blank" rel="noopener noreferrer">
           Download on the App Store
         </a>
       </main>
