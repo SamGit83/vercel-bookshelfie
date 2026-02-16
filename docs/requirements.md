@@ -51,4 +51,30 @@ The Bookshelfie website serves as a marketing and acquisition platform for the B
 1. **User Behavior Tracking**: Implement analytics to track tool usage, conversion rates to app downloads, and user engagement metrics.
 2. **Performance Monitoring**: Set up monitoring to track website uptime, loading speeds, and error rates.
 
+## Marketing Website
+
+### Functional Requirements
+
+- **Home Page (/)**: Elegant header with navigation links to Home and Contact. Central 3x3 responsive grid displaying free tools as cards, each with tool title, short use-case description, and clickable link to dedicated tool page (/tools/[slug]). Footer with copyright notice, App Store link, and social links.
+
+- **Contact Page (/contact)**: Contact details including Bookshelfie app information, developer Sam Bhattacharjee, direct App Store link (https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB), and prominent call-to-action to subscribe/download the premium app.
+
+- **Tool Pages (/tools/[slug])**: Placeholder pages for each of the 9 free tools (detailed below), to be populated later.
+
+### Placeholder Free Tools (3x3 Grid)
+
+1. **Book Scanner**: Scan ISBN using your device's camera to instantly add books to your virtual library.
+2. **Reading Progress Tracker**: Log daily reading sessions and track progress across your entire library.
+3. **Genre Sorter**: Automatically categorize and sort books by genre for easy discovery.
+4. **Reading Goal Setter**: Set customizable annual reading goals and monitor achievement with visuals.
+5. **Smart Recommendations**: Receive personalized book suggestions based on your reading history.
+6. **Author Explorer**: Explore full bibliographies and details of your favorite authors.
+7. **Shelf Planner**: Virtually design and arrange your physical or digital bookshelves.
+8. **Reading Insights**: Generate detailed statistics and insights from your reading habits.
+9. **ISBN Lookup**: Quickly fetch book details by entering an ISBN without scanning.
+
+### Non-Functional Requirements
+
+- **Design**: Elegant, simple, modern aesthetic – minimalist layout, subtle gradients, card-based design with hover effects, rounded corners, shadows, sans-serif fonts (e.g., Inter), fully responsive (mobile-first).
+
 This requirements document serves as the foundation for developing the Bookshelfie website. All development efforts should align with these requirements to ensure the website effectively supports customer acquisition for the Bookshelfie app.

@@ -89,4 +89,28 @@ Integration points include:
   - Social Media APIs: For sharing functionality and community building.
   - External Book APIs: To power search and recommendation features without storing sensitive data.
 
+## Frontend Marketing Site
+
+### Pages
+- `/` (Home): Header, 3x3 ToolGrid of ToolCards, Footer.
+- `/contact`: App and developer contact information.
+
+### Components
+- **Header**: Navigation bar with Home and Contact links.
+- **Footer**: Copyright, App Store link (https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB), social links.
+- **ToolCard**: Title, short description, "Use Tool" button linking to `/tools/[slug]`.
+- **ToolGrid**: Responsive 3x3 grid (grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 with Tailwind).
+
+### Data & State
+- Static array of 9 placeholder tools (defined in `/lib/tools.js` or inline).
+
+### Routing (Next.js)
+- `pages/index.js`: Home page.
+- `pages/contact.js`: Contact page.
+- `pages/tools/[slug].js`: Dynamic tool placeholder pages.
+
+### Styling Recommendations
+- **Tailwind CSS** (not installed; add `npm i -D tailwindcss postcss autoprefixer`, `npx tailwindcss init -p`, configure `tailwind.config.js`, add directives to `styles/globals.css`).
+- **Design**: Minimalist modern – bg-gradient-to-r from-slate-50 to-blue-50, font: Inter (import via `next/font/google`), shadows (shadow-md hover:shadow-xl), rounded-lg, transitions for hovers, fully responsive.
+
 This architecture positions the Bookshelfie website as an effective bridge between free web tools and the premium mobile app experience.
