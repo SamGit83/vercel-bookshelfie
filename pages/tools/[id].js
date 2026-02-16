@@ -11,7 +11,15 @@ export default function ToolPage() {
   const { id } = router.query
 
   if (!id) {
-    return <div>Loading...</div>
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex items-center justify-center">
+          <p className="text-gray-500 text-lg">Loading...</p>
+        </main>
+        <Footer />
+      </>
+    )
   }
 
   const toolIndex = parseInt(id) - 1
@@ -21,10 +29,12 @@ export default function ToolPage() {
     return (
       <>
         <Header />
-        <div className="container mx-auto px-6 py-20 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Tool Not Found</h1>
-          <Link href="/" className="text-blue-500 hover:underline">Go Home</Link>
-        </div>
+        <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">Tool Not Found</h1>
+            <Link href="/" className="text-blue-600 hover:underline font-medium">← Back to Home</Link>
+          </div>
+        </main>
         <Footer />
       </>
     )
@@ -33,32 +43,43 @@ export default function ToolPage() {
   return (
     <>
       <Head>
-        <title>{tool.title} - Bookshelfie Free Tools</title>
+        <title>{tool.title} — Bookshelfie Free Tools</title>
+        <meta name="description" content={tool.desc} />
       </Head>
       <Header />
-      <main className="py-20 bg-gradient-to-br from-blue-50 to-green-50 min-h-screen">
-        <div className="container mx-auto px-6 max-w-4xl">
-          <Link href="/" className="inline-flex items-center mb-8 text-blue-600 hover:text-blue-800 font-semibold transition">
-            \u2190 Back to Tools
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 py-20">
+        <div className="container mx-auto px-6 max-w-3xl">
+          <Link
+            href="/"
+            className="inline-flex items-center mb-10 text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+          >
+            ← Back to Tools
           </Link>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent mb-6 text-center drop-shadow-lg">
-            {tool.title}
-          </h1>
-          <p className="text-3xl md:text-4xl text-center font-light text-blue-600 mb-12">Coming Soon!</p>
-          <div className="bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl p-12 md:p-20 text-center">
-            <p className="text-2xl md:text-3xl font-light text-gray-700 mb-8 leading-relaxed">
-              The free <span className="font-semibold text-blue-600">{tool.title.toLowerCase()}</span> tool is coming soon!
+
+          <div className="bg-white/80 backdrop-blur-md shadow-xl rounded-3xl p-10 md:p-16 text-center border border-white/50">
+            <p className="text-6xl mb-6">{tool.icon}</p>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
+              {tool.title}
+            </h1>
+            <p className="text-gray-600 mb-8 max-w-lg mx-auto leading-relaxed">
+              {tool.desc}
             </p>
-            <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
-              In the meantime, upgrade to the full Bookshelfie app to unlock all tools and premium features.
+
+            <div className="inline-block bg-blue-50 text-blue-700 px-6 py-3 rounded-full font-semibold text-sm mb-10">
+              🚀 Coming Soon
+            </div>
+
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+              This free tool is under development. In the meantime, get the full experience with the Bookshelfie app — all tools and premium features included.
             </p>
-            <a 
+
+            <a
               href="https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block bg-gradient-to-r from-blue-500 to-green-500 text-white px-12 py-6 rounded-2xl font-bold text-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+              className="inline-block bg-gradient-to-r from-blue-600 to-emerald-500 text-white px-10 py-4 rounded-2xl font-bold text-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
             >
-              Get Full App on App Store
+              Get the Full App →
             </a>
           </div>
         </div>

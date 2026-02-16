@@ -92,25 +92,32 @@ Integration points include:
 ## Frontend Marketing Site
 
 ### Pages
-- `/` (Home): Header, 3x3 ToolGrid of ToolCards, Footer.
-- `/contact`: App and developer contact information.
+- `/` (Home): Header, hero section with value proposition, 3×3 ToolGrid of ToolCards, Footer.
+- `/contact`: App details, developer info (Sam Bhattacharjee), App Store CTA.
+- `/tools/[id]`: Dynamic tool placeholder pages with "Coming Soon" message and App Store CTA.
 
 ### Components
-- **Header**: Navigation bar with Home and Contact links.
-- **Footer**: Copyright, App Store link (https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB), social links.
-- **ToolCard**: Title, short description, "Use Tool" button linking to `/tools/[slug]`.
-- **ToolGrid**: Responsive 3x3 grid (grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 with Tailwind).
+- **Header** (`components/Header.js`): Gradient navigation bar with Home and Contact links, site branding.
+- **Footer** (`components/Footer.js`): Copyright, App Store link, Contact link.
+- **ToolCard** (`components/ToolCard.js`): Icon/emoji, title, short description, "Try Free Tool" button linking to `/tools/[id]`.
+- **ToolGrid** (`components/ToolGrid.js`): Responsive grid (grid-cols-1 md:grid-cols-2 lg:grid-cols-3) rendering ToolCards.
 
 ### Data & State
-- Static array of 9 placeholder tools (defined in `/lib/tools.js` or inline).
+- Centralized static array of 9 placeholder tools defined in `lib/tools.js`. Each tool has `id`, `title`, `desc`, and `icon` (emoji) properties.
+- No external API calls or dynamic state — purely static content for now.
 
-### Routing (Next.js)
+### Routing (Next.js Pages Router)
 - `pages/index.js`: Home page.
 - `pages/contact.js`: Contact page.
-- `pages/tools/[slug].js`: Dynamic tool placeholder pages.
+- `pages/tools/[id].js`: Dynamic tool placeholder pages (uses `useRouter` to read `id` param).
+- `pages/_app.js`: Global app wrapper with Inter font and global CSS import.
 
-### Styling Recommendations
-- **Tailwind CSS** (not installed; add `npm i -D tailwindcss postcss autoprefixer`, `npx tailwindcss init -p`, configure `tailwind.config.js`, add directives to `styles/globals.css`).
-- **Design**: Minimalist modern – bg-gradient-to-r from-slate-50 to-blue-50, font: Inter (import via `next/font/google`), shadows (shadow-md hover:shadow-xl), rounded-lg, transitions for hovers, fully responsive.
+### Styling (Current Implementation)
+- **Tailwind CSS v4** with `@tailwindcss/postcss` plugin (configured in `postcss.config.js`).
+- **PostCSS config** (`postcss.config.js`): Uses `@tailwindcss/postcss` and `autoprefixer`.
+- **Tailwind config** (`tailwind.config.js`): Content paths for `pages/` and `components/`.
+- **Global CSS** (`styles/globals.css`): Tailwind directives (`@tailwind base/components/utilities`).
+- **Font**: Inter loaded via `next/font/google` in `_app.js`.
+- **Design language**: Blue-to-green gradient palette, glassmorphism (backdrop-blur, bg-white/80), rounded corners (rounded-2xl/3xl), shadow-xl with hover lift effects, fully responsive mobile-first layout.
 
 This architecture positions the Bookshelfie website as an effective bridge between free web tools and the premium mobile app experience.
