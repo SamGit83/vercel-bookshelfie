@@ -1,77 +1,80 @@
-
 import Head from 'next/head'
-import Link from 'next/link'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
 
 export default function Contact() {
   return (
     <>
       <Head>
-        <title>Contact — Bookshelfie Free Tools</title>
-        <meta name="description" content="Get in touch with the Bookshelfie team. Download Book Shelfie on the App Store." />
+        <title>Contact — Bookshelfie</title>
+        <meta name="description" content="Get in touch with the Bookshelfie team" />
       </Head>
-      <Header />
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50 py-20">
-        <div className="container mx-auto px-6 max-w-3xl">
-          <div className="text-center mb-14">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">Get in Touch</h1>
-            <p className="text-lg text-gray-600">Learn more about Bookshelfie or download the full app.</p>
-          </div>
 
-          {/* App Info Card */}
-          <div className="bg-white/80 backdrop-blur-md shadow-xl rounded-3xl p-10 md:p-14 border border-white/50 mb-8">
-            <div className="text-center mb-10">
-              <p className="text-5xl mb-4">📚</p>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Book Shelfie</h2>
-              <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">iOS Reading &amp; Book Tracking App</p>
-            </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
+          <p className="text-lg text-gray-500 mb-12">
+            Have questions about Bookshelfie? We&apos;d love to hear from you.
+          </p>
 
-            <div className="space-y-6 text-gray-700 max-w-lg mx-auto">
+          <div className="grid gap-6">
+            <div className="card p-6">
               <div className="flex items-start gap-4">
-                <span className="text-xl mt-0.5">👤</span>
-                <div>
-                  <p className="font-semibold text-gray-800">Developer</p>
-                  <p>Sam Bhattacharjee</p>
+                <div className="w-10 h-10 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                  </svg>
                 </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-xl mt-0.5">📱</span>
                 <div>
-                  <p className="font-semibold text-gray-800">Platform</p>
-                  <p>iOS (iPhone &amp; iPad)</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <span className="text-xl mt-0.5">⭐</span>
-                <div>
-                  <p className="font-semibold text-gray-800">What You Get</p>
-                  <p>Track your reading, scan books, set goals, get recommendations, and organize your entire library — all in one beautiful app.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">About Bookshelfie</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Bookshelfie is your ultimate reading companion app, available on the App Store. We provide free tools to help you discover, track, and enjoy books.
+                  </p>
                 </div>
               </div>
             </div>
+
+            <div className="card p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Download the App</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Get the full Bookshelfie experience on your iPhone or iPad. Available for free on the App Store.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-1">Rate & Review</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    Love Bookshelfie? Leave us a review on the App Store — it helps other readers discover us!
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-gradient-to-r from-blue-600 to-emerald-500 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center"
-            >
-              Download on the App Store
+          <div className="mt-10 flex flex-col sm:flex-row gap-3">
+            <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer" className="btn-primary">
+              Get on App Store
+              <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
             </a>
-            <Link
-              href="/"
-              className="border-2 border-gray-200 text-gray-700 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 text-center"
-            >
-              ← Back to Free Tools
-            </Link>
           </div>
         </div>
-      </main>
-      <Footer />
+      </div>
     </>
   )
 }

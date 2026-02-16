@@ -1,7 +1,4 @@
-
 import Head from 'next/head'
-import Header from '../components/Header'
-import Footer from '../components/Footer'
 import ToolGrid from '../components/ToolGrid'
 import { tools } from '../lib/tools'
 
@@ -9,55 +6,52 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Bookshelfie — Free Book Tools</title>
-        <meta name="description" content="Discover free book tools from Bookshelfie. Get instant value now, upgrade to the full iOS app for premium features." />
+        <title>Bookshelfie — Your Reading, Supercharged</title>
+        <meta name="description" content="Free tools to enhance your reading experience" />
       </Head>
-      <Header />
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
-        {/* Hero Section */}
-        <section className="py-20 md:py-28">
-          <div className="container mx-auto px-6 max-w-7xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 mb-4">
-              Free &amp; Open Tools for Book Lovers
-            </p>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-gray-900 mb-6 leading-tight">
-              Your Reading,{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent">
-                Supercharged
-              </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-10">
-              Explore 9 free book tools — track your reading, discover new titles, and organize your library. Love them? Upgrade to the full{' '}
-              <a
-                href="https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 font-semibold hover:underline"
-              >
-                Bookshelfie app
-              </a>{' '}
-              for unlimited access.
-            </p>
-            <a
-              href="#tools"
-              className="inline-block bg-gradient-to-r from-blue-600 to-emerald-500 text-white px-8 py-3.5 rounded-full font-semibold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
-            >
-              Browse Free Tools ↓
+
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-brand-50/80 to-transparent pointer-events-none" />
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-sm font-medium mb-6">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+            </svg>
+            Free reading tools
+          </div>
+          
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 tracking-tight mb-6">
+            Your Reading,{' '}
+            <span className="text-brand-600">Supercharged</span>
+          </h1>
+          
+          <p className="text-lg sm:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Discover free tools designed to enhance every aspect of your reading experience — from scanning books to tracking your progress.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer" className="btn-primary">
+              Download on App Store
+              <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
+              </svg>
+            </a>
+            <a href="#tools" className="btn-secondary">
+              Explore Tools
             </a>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Tools Grid */}
-        <section id="tools" className="pb-24">
-          <div className="container mx-auto px-6 max-w-7xl">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-12">
-              Free Tools
-            </h2>
-            <ToolGrid tools={tools} />
-          </div>
-        </section>
-      </main>
-      <Footer />
+      {/* Tools */}
+      <section id="tools" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+        <div className="mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Free Tools</h2>
+          <p className="text-gray-500">Everything you need to level up your reading game.</p>
+        </div>
+        <ToolGrid tools={tools} />
+      </section>
     </>
   )
 }
