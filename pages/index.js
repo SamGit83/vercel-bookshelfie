@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Bookshelfie — Your Reading, Supercharged</title>
+        <title>Book Shelfie — Your Reading, Supercharged</title>
         <meta name="description" content="Free tools to enhance your reading experience" />
       </Head>
 
@@ -31,7 +31,7 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer" className="btn-primary">
+            <a href="https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB" target="_blank" rel="noopener noreferrer" className="btn-primary">
               Download on App Store
               <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />

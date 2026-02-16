@@ -4,15 +4,15 @@ export default function Contact() {
   return (
     <>
       <Head>
-        <title>Contact — Bookshelfie</title>
-        <meta name="description" content="Get in touch with the Bookshelfie team" />
+        <title>Contact — Book Shelfie</title>
+        <meta name="description" content="Get in touch with the Book Shelfie team" />
       </Head>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Get in Touch</h1>
           <p className="text-lg text-gray-500 mb-12">
-            Have questions about Bookshelfie? We&apos;d love to hear from you.
+            Have questions about Book Shelfie? We&apos;d love to hear from you.
           </p>
 
           <div className="grid gap-6">
@@ -24,9 +24,9 @@ export default function Contact() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">About Bookshelfie</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">About Book Shelfie</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    Bookshelfie is your ultimate reading companion app, available on the App Store. We provide free tools to help you discover, track, and enjoy books.
+                    Book Shelfie is your ultimate reading companion app, available on the App Store. We provide free tools to help you discover, track, and enjoy books.
                   </p>
                 </div>
               </div>
@@ -42,7 +42,7 @@ export default function Contact() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Download the App</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    Get the full Bookshelfie experience on your iPhone or iPad. Available for free on the App Store.
+                    Get the full Book Shelfie experience on your iPhone or iPad. Available for free on the App Store.
                   </p>
                 </div>
               </div>
@@ -58,7 +58,7 @@ export default function Contact() {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Rate & Review</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    Love Bookshelfie? Leave us a review on the App Store — it helps other readers discover us!
+                    Love Book Shelfie? Leave us a review on the App Store — it helps other readers discover us!
                   </p>
                 </div>
               </div>
@@ -66,7 +66,7 @@ export default function Contact() {
           </div>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-3">
-            <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer" className="btn-primary">
+            <a href="https://apps.apple.com/se/app/book-shelfie/id6753343399?l=en-GB" target="_blank" rel="noopener noreferrer" className="btn-primary">
               Get on App Store
               <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
