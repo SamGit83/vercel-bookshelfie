@@ -19,7 +19,16 @@ export default async function handler(req, res) {
     // Construct the prompt for Grok
     const systemPrompt = `You are a creative AI prompt generator. Generate a high-quality, detailed prompt based on the user's specifications. The prompt should be clear, engaging, and ready to use.`
     
-    const userPrompt = `Generate a ${length} ${style} prompt about "${topic}" with a ${tone} tone. The prompt should be well-structured and inspiring.`
+    // Map qualitative length to explicit sentence counts
+    const lengthMap = {
+      short: '1-10 sentences',
+      medium: '10-20 sentences',
+      long: '20-1000 sentences'
+    }
+
+    const userPrompt = `Generate a prompt about "${topic}" with a ${tone} tone. 
+The prompt should be ${lengthMap[length] || 'medium length'}. 
+Format it as a ${style} prompt that is clear and ready to use.`
 
     // Call Grok AI API
     const response = await fetch('https://api.x.ai/v1/chat/completions', {

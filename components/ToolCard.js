@@ -33,6 +33,19 @@ function ToolIcon({ name, className }) {
 }
 
 export default function ToolCard({ tool }) {
+  // Debug logging to identify data structure issues
+  console.log('ToolCard received tool:', {
+    id: tool.id,
+    title: tool.title,
+    name: tool.name,
+    desc: tool.desc,
+    description: tool.description,
+    iconName: tool.iconName,
+    icon: tool.icon,
+    color: tool.color,
+    fullTool: tool
+  })
+
   const colorClass = iconColors[tool.color] || iconColors.blue
 
   return (
