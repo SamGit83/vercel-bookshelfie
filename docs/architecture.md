@@ -39,6 +39,7 @@ This structure supports separation of concerns: dynamic content in `pages/`, sta
   - CSS-in-JS or styled-components for styling to ensure maintainable and responsive designs.
   - Analytics tools (e.g., Google Analytics) for user behavior tracking.
   - Email marketing platforms (e.g., Mailchimp) for newsletter subscriptions.
+  - AI Integration: Grok AI API for prompt generation in the AI Prompt Generator tool, secured via GROK_API_KEY environment variable.
 
 ## Deployment Process
 
@@ -88,6 +89,7 @@ Integration points include:
   - Email Services: For newsletter subscriptions and automated campaigns.
   - Social Media APIs: For sharing functionality and community building.
   - External Book APIs: To power search and recommendation features without storing sensitive data.
+  - Grok AI API: For generating creative prompts in the AI Prompt Generator tool.
 
 ## Frontend Marketing Site
 

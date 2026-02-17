@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -47,9 +48,327 @@ function ToolIcon({ name, className }) {
   )
 }
 
+function AIPromptGenerator() {
+  const [formData, setFormData] = useState({
+    topic: '',
+    tone: 'professional',
+    length: 'medium',
+    style: 'creative'
+  })
+  const [generatedPrompt, setGeneratedPrompt] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setGeneratedPrompt('')
+
+    try {
+      const response = await fetch('/api/generate-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate prompt')
+      }
+
+      const data = await response.json()
+      setGeneratedPrompt(data.prompt)
+    } catch (err) {
+      setError(err.message || 'An error occurred while generating the prompt')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedPrompt)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
+
+  const shareOnTwitter = () => {
+    const text = encodeURIComponent(`Check out this AI prompt I generated: ${generatedPrompt.substring(0, 200)}...`)
+    const url = encodeURIComponent(window.location.href)
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank')
+  }
+
+  const shareOnLinkedIn = () => {
+    const url = encodeURIComponent(window.location.href)
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank')
+  }
+
+  return (
+    <>
+      <Head>
+        <title>AI Prompt Generator — Book Shelfie</title>
+        <meta name="description" content="Generate creative prompts for writing, brainstorming, or AI interactions." />
+      </Head>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+          <Link href="/" className="hover:text-brand-600 transition-colors">Home</Link>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+          <Link href="/#tools" className="hover:text-brand-600 transition-colors">Tools</Link>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+          <span className="text-gray-900 font-medium">AI Prompt Generator</span>
+        </nav>
+
+        {/* Header */}
+        <div className="card p-8 sm:p-12 mb-8">
+          <div className="flex flex-col sm:flex-row items-start gap-6">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-indigo-50 text-indigo-600">
+              <ToolIcon name="sparkles" className="w-8 h-8" />
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">AI Prompt Generator</h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                  Active
+                </span>
+              </div>
+              
+              <p className="text-lg text-gray-500 leading-relaxed mb-8 max-w-2xl">
+                Generate creative prompts for writing, brainstorming, or AI interactions. Customize the topic, tone, length, and style to get the perfect prompt for your needs.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="card p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Customize Your Prompt</h2>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Topic */}
+              <div>
+                <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-2">
+                  Topic
+                </label>
+                <input
+                  type="text"
+                  id="topic"
+                  name="topic"
+                  value={formData.topic}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Science fiction story, Marketing campaign, Recipe ideas"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  required
+                />
+              </div>
+
+              {/* Tone */}
+              <div>
+                <label htmlFor="tone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tone
+                </label>
+                <select
+                  id="tone"
+                  name="tone"
+                  value={formData.tone}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                >
+                  <option value="professional">Professional</option>
+                  <option value="casual">Casual</option>
+                  <option value="friendly">Friendly</option>
+                  <option value="formal">Formal</option>
+                  <option value="humorous">Humorous</option>
+                  <option value="inspirational">Inspirational</option>
+                </select>
+              </div>
+
+              {/* Length */}
+              <div>
+                <label htmlFor="length" className="block text-sm font-medium text-gray-700 mb-2">
+                  Length
+                </label>
+                <select
+                  id="length"
+                  name="length"
+                  value={formData.length}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                >
+                  <option value="short">Short (1-2 sentences)</option>
+                  <option value="medium">Medium (3-5 sentences)</option>
+                  <option value="long">Long (6+ sentences)</option>
+                </select>
+              </div>
+
+              {/* Style */}
+              <div>
+                <label htmlFor="style" className="block text-sm font-medium text-gray-700 mb-2">
+                  Style
+                </label>
+                <select
+                  id="style"
+                  name="style"
+                  value={formData.style}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                >
+                  <option value="creative">Creative</option>
+                  <option value="analytical">Analytical</option>
+                  <option value="descriptive">Descriptive</option>
+                  <option value="narrative">Narrative</option>
+                  <option value="instructional">Instructional</option>
+                  <option value="persuasive">Persuasive</option>
+                </select>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading || !formData.topic}
+                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    Generate Prompt
+                    <svg className="w-4 h-4 ml-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                    </svg>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Output */}
+          <div className="card p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Generated Prompt</h2>
+            
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-red-600 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {!generatedPrompt && !error && !loading && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500">Your generated prompt will appear here</p>
+              </div>
+            )}
+
+            {generatedPrompt && (
+              <div className="space-y-6">
+                <div className="p-6 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{generatedPrompt}</p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={copyToClipboard}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-brand-700 bg-brand-50 rounded-lg hover:bg-brand-100 transition-all duration-200 border border-brand-200"
+                  >
+                    {copied ? (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                        </svg>
+                        Copy to Clipboard
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={shareOnTwitter}
+                    className="inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                    Share
+                  </button>
+
+                  <button
+                    onClick={shareOnLinkedIn}
+                    className="inline-flex items-center justify-center px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all duration-200"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                    Share
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Back Button */}
+        <div className="mt-8">
+          <Link href="/" className="inline-flex items-center text-sm text-gray-600 hover:text-brand-600 transition-colors">
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Back to all tools
+          </Link>
+        </div>
+      </div>
+    </>
+  )
+}
+
 export default function ToolDetail() {
   const router = useRouter()
   const { id } = router.query
+
+  // Handle AI Prompt Generator specifically
+  if (id === 'ai-prompt-generator') {
+    return <AIPromptGenerator />
+  }
+
   const tool = id ? getToolById(id) : null
 
   if (!tool) {

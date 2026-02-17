@@ -80,7 +80,7 @@ The marketing website is a free tools site designed to provide immediate value t
 
 ### Placeholder Free Tools (3×3 Grid)
 
-1. **📷 Book Scanner**: Scan ISBN using your device's camera to instantly add books to your virtual library.
+1. **🤖 AI Prompt Generator**: Generate personalized AI prompts for book-related creative writing, reviews, or summaries based on your inputs.
 2. **📖 Reading Progress Tracker**: Log daily reading sessions and track progress across your entire library.
 3. **🏷️ Genre Sorter**: Automatically categorize and sort books by genre for easy discovery.
 4. **🎯 Reading Goal Setter**: Set customizable annual reading goals and monitor achievement with visuals.
@@ -89,6 +89,14 @@ The marketing website is a free tools site designed to provide immediate value t
 7. **📚 Shelf Planner**: Virtually design and arrange your physical or digital bookshelves.
 8. **📊 Reading Insights**: Generate detailed statistics and insights from your reading habits.
 9. **🔍 ISBN Lookup**: Quickly fetch book details by entering an ISBN without scanning.
+
+### AI Prompt Generator Detailed Specifications
+
+- **Form Fields**: Topic, Tone, Length, Style
+- **Submission**: Generate prompt using Grok AI (via GROK_API_KEY)
+- **Display**: Show the generated prompt
+- **Actions**: Buttons for copy to clipboard and share on socials
+- **Alignment**: Serves as a lead magnet for book-related tools, encouraging app download
 
 ### Non-Functional Requirements
 
