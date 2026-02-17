@@ -1,6 +1,9 @@
 import Head from 'next/head'
 import ToolGrid from '../components/ToolGrid'
 import { tools } from '../lib/tools'
+import UserJourney from '../components/UserJourney'
+import Benefits from '../components/Benefits'
+import HowItWorks from '../components/HowItWorks'
 
 export default function Home() {
   return (

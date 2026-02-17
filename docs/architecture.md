@@ -94,7 +94,7 @@ Integration points include:
 ## Frontend Marketing Site
 
 ### Pages
-- `/` (Home): Header, hero section with value proposition, 3×3 ToolGrid of ToolCards, Footer.
+- `/` (Home): Header, hero section with value proposition, **UserJourney section** (before/after comparison), **Benefits section** (key benefit cards), **HowItWorks section** (4-step process flow), 3×3 ToolGrid of ToolCards, Footer.
 - `/contact`: App details, developer info (Sam Bhattacharjee), App Store CTA.
 - `/tools/[id]`: Dynamic tool placeholder pages with "Coming Soon" message and App Store CTA.
 
@@ -103,6 +103,17 @@ Integration points include:
 - **Footer** (`components/Footer.js`): Copyright, App Store link, Contact link.
 - **ToolCard** (`components/ToolCard.js`): Icon/emoji, title, short description, "Try Free Tool" button linking to `/tools/[id]`.
 - **ToolGrid** (`components/ToolGrid.js`): Responsive grid (grid-cols-1 md:grid-cols-2 lg:grid-cols-3) rendering ToolCards.
+- **UserJourney** (`components/UserJourney.js`): Displays "Pragya's Reading Journey" as a before/after comparison. Two-column layout contrasting "Before Book Shelfie" struggles with "After Book Shelfie" enhancements. Each column contains 5 bullet points with icons and descriptive text.
+  - **Struggles column icons**: clock (cataloging), stack-slash (disorganized), magnifying-glass (searching), chart (no tracking), lightbulb-slash (discovery difficulty).
+  - **Enhancements column icons**: camera-viewfinder (AI scanning), folder (digital organization), chart-uptrend (progress tracking), star (recommendations), heart (reading enjoyment).
+  - Fade-in on scroll animation with staggered entry for bullet points.
+- **Benefits** (`components/Benefits.js`): Visual cards highlighting key benefits of Book Shelfie, derived from the enhancement points in the UserJourney component. Card-based layout with icons, consistent with existing glassmorphism design language. Hover effects (scale, shadow lift) matching existing ToolCard style.
+- **HowItWorks** (`components/HowItWorks.js`): 4-step horizontal/vertical process flow illustrating the core user workflow:
+  1. 📷 "Scan Your Bookshelf" — "Point your camera at your bookshelf and capture a photo"
+  2. ✨ "AI Recognition" — "Our AI instantly identifies books using advanced computer vision"
+  3. 📚 "Organize & Track" — "Automatically organize your library and track reading progress"
+  4. ⭐ "Discover New Books" — "Get personalized recommendations powered by smart AI"
+  - Step numbers or connecting lines between steps. Staggered fade-in animation on scroll.
 
 ### Data & State
 - Centralized static array of 9 placeholder tools defined in `lib/tools.js`. Each tool has `id`, `title`, `desc`, and `icon` (emoji) properties.
@@ -121,5 +132,13 @@ Integration points include:
 - **Global CSS** (`styles/globals.css`): Tailwind directives (`@tailwind base/components/utilities`).
 - **Font**: Inter loaded via `next/font/google` in `_app.js`.
 - **Design language**: Blue-to-green gradient palette, glassmorphism (backdrop-blur, bg-white/80), rounded corners (rounded-2xl/3xl), shadow-xl with hover lift effects, fully responsive mobile-first layout.
+
+### Animation & Transitions
+- **Library**: CSS animations with Tailwind classes, or lightweight library like `framer-motion` or Intersection Observer API.
+- **Scroll-triggered animations**: Fade-in and slide-up on viewport entry using Intersection Observer.
+- **Staggered entry**: Sequential delay for list items (e.g., 100ms increments).
+- **Hover micro-interactions**: Scale transform and shadow elevation on cards.
+- **Transitions**: Smooth section-to-section flow with consistent easing (ease-out).
+- **Performance**: Animations use `transform` and `opacity` only (GPU-accelerated, no layout thrashing).
 
 This architecture positions the Bookshelfie website as an effective bridge between free web tools and the premium mobile app experience.

@@ -62,6 +62,32 @@ The marketing website is a free tools site designed to provide immediate value t
 - **Home Page (`/`)**:
   - Elegant header with navigation links to Home and Contact.
   - Hero section with clear value proposition: "Free book tools — get value now, upgrade for more."
+  - **User Journey Section ("Pragya's Reading Journey")**:
+    - Title: "Pragya's Reading Journey"
+    - Subtitle/description: "Meet Pragya, a college student overwhelmed by her growing physical bookshelf. Discover how traditional reading struggles led her to Book Shelfie, and how our app transformed her entire reading experience."
+    - Two-column layout showing "Before" struggles and "After" enhancements.
+    - **Struggles (Before Book Shelfie):**
+      - Clock icon: "Countless hours manually cataloging books"
+      - Stack-slash icon: "Disorganized shelves and lost books"
+      - Magnifying-glass icon: "Wasting time searching for titles"
+      - Chart icon: "No progress tracking capabilities"
+      - Lightbulb-slash icon: "Difficulty discovering new books"
+    - **Enhancements (After Book Shelfie):**
+      - Camera-viewfinder icon: "Instant AI-powered bookshelf scanning"
+      - Folder icon: "Digital organization of entire collection"
+      - Chart-uptrend icon: "Effortless reading progress tracking"
+      - Star icon: "Personalized book recommendations"
+      - Heart icon: "Pure reading enjoyment and discovery"
+  - **Benefits Section**:
+    - Summarize the key benefits of using Book Shelfie based on the enhancements from the User Journey section.
+    - Visual cards or highlight blocks for each benefit.
+    - Should reinforce the transformation shown in the user journey (e.g., instant scanning, digital organization, progress tracking, personalized recommendations, reading enjoyment).
+  - **How It Works Section**:
+    - Step-by-step process with 4 steps:
+      1. Camera icon — "Scan Your Bookshelf" — "Point your camera at your bookshelf and capture a photo"
+      2. Sparkles icon — "AI Recognition" — "Our AI instantly identifies books using advanced computer vision"
+      3. Books icon — "Organize & Track" — "Automatically organize your library and track reading progress"
+      4. Star icon — "Discover New Books" — "Get personalized recommendations powered by smart AI"
   - Central 3×3 responsive grid displaying 9 free tool cards, each with an icon/emoji, tool title, short use-case description, and a clickable link to the dedicated tool page (`/tools/[id]`).
   - Footer with copyright notice, App Store link, and contact link.
 
@@ -97,6 +123,15 @@ The marketing website is a free tools site designed to provide immediate value t
 - **Display**: Show the generated prompt
 - **Actions**: Buttons for copy to clipboard and share on socials
 - **Alignment**: Serves as a lead magnet for book-related tools, encouraging app download
+
+### Animation & Visual Requirements
+
+- **Micro-Animations**: All three new homepage sections (User Journey, Benefits, How It Works) should include micro-animations:
+  - Fade-in on scroll for section content.
+  - Staggered entry for list items (e.g., struggle/enhancement items, benefit cards, how-it-works steps appear sequentially with a slight delay between each).
+  - Subtle hover effects on cards (scale, shadow lift, color shift).
+- **Smooth Transitions**: Smooth transitions between sections as the user scrolls down the page.
+- **Design Consistency**: All new sections must be consistent with the existing design language — blue-to-green gradient palette, glassmorphism (backdrop-blur, semi-transparent backgrounds), rounded corners, and Inter font.
 
 ### Non-Functional Requirements
 
