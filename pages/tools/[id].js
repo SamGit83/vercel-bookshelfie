@@ -180,7 +180,7 @@ function AIPromptGenerator() {
                   value={formData.topic}
                   onChange={handleInputChange}
                   placeholder="e.g., Science fiction story, Marketing campaign, Recipe ideas"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
@@ -195,7 +195,7 @@ function AIPromptGenerator() {
                   name="tone"
                   value={formData.tone}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="professional">Professional</option>
                   <option value="casual">Casual</option>
@@ -216,7 +216,7 @@ function AIPromptGenerator() {
                   name="length"
                   value={formData.length}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="short">Short (1-10 sentences)</option>
                   <option value="medium">Medium (10-20 sentences)</option>
@@ -234,7 +234,7 @@ function AIPromptGenerator() {
                   name="style"
                   value={formData.style}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="creative">Creative</option>
                   <option value="analytical">Analytical</option>
@@ -257,7 +257,7 @@ function AIPromptGenerator() {
                   value={formData.targetAudience}
                   onChange={handleInputChange}
                   placeholder="e.g., developers, marketers, students"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -273,7 +273,7 @@ function AIPromptGenerator() {
                   value={formData.keyFocusAreas}
                   onChange={handleInputChange}
                   placeholder="e.g., productivity, automation, best practices (comma-separated)"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="mt-1 text-sm text-gray-500">Separate multiple areas with commas</p>
               </div>
