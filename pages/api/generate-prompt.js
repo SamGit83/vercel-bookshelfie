@@ -39,7 +39,7 @@ export default async function handler(req, res) {
             content: userPrompt
           }
         ],
-        model: 'grok-beta',
+        model: 'grok-3-mini',
         stream: false,
         temperature: 0.7,
       }),
