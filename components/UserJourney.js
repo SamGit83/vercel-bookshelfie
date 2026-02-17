@@ -49,9 +49,9 @@ const UserJourney = () => {
     <div ref={ref}>
       <div className="text-center mb-10">
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Your Reading Journey
+          Pragya's Reading Journey
         </h2>
-        <p className="text-gray-500">See how Book Shelfie transforms the way you manage your library.</p>
+        <p className="text-gray-500">See how Book Shelfie transforms the way she manages her library.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className={`card group p-8 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
