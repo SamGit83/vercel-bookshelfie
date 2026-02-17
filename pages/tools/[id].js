@@ -53,7 +53,9 @@ function AIPromptGenerator() {
     topic: '',
     tone: 'professional',
     length: 'medium',
-    style: 'creative'
+    style: 'creative',
+    targetAudience: '',
+    keyFocusAreas: ''
   })
   const [generatedPrompt, setGeneratedPrompt] = useState('')
   const [loading, setLoading] = useState(false)
@@ -241,6 +243,39 @@ function AIPromptGenerator() {
                   <option value="instructional">Instructional</option>
                   <option value="persuasive">Persuasive</option>
                 </select>
+              </div>
+
+              {/* Target Audience */}
+              <div>
+                <label htmlFor="targetAudience" className="block text-sm font-medium text-gray-700 mb-2">
+                  Target Audience
+                </label>
+                <input
+                  type="text"
+                  id="targetAudience"
+                  name="targetAudience"
+                  value={formData.targetAudience}
+                  onChange={handleInputChange}
+                  placeholder="e.g., developers, marketers, students"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                />
+              </div>
+
+              {/* Key Focus Areas */}
+              <div>
+                <label htmlFor="keyFocusAreas" className="block text-sm font-medium text-gray-700 mb-2">
+                  Key Focus Areas
+                </label>
+                <input
+                  type="text"
+                  id="keyFocusAreas"
+                  name="keyFocusAreas"
+                  value={formData.keyFocusAreas}
+                  onChange={handleInputChange}
+                  placeholder="e.g., productivity, automation, best practices (comma-separated)"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                />
+                <p className="mt-1 text-sm text-gray-500">Separate multiple areas with commas</p>
               </div>
 
               {/* Submit Button */}

@@ -4,6 +4,8 @@ export default async function handler(req, res) {
   }
 
   const { topic, tone, length, style } = req.body
+  const targetAudience = req.body.targetAudience || '';
+  const keyFocusAreas = req.body.keyFocusAreas || '';
 
   if (!topic) {
     return res.status(400).json({ error: 'Topic is required' })
@@ -11,7 +13,7 @@ export default async function handler(req, res) {
 
   try {
     // Debug: Log incoming form data
-    console.log('[DEBUG] Form data received:', { topic, tone, length, style })
+    console.log('[DEBUG] Form data received:', { topic, tone, length, style, targetAudience, keyFocusAreas })
 
     const apiKey = process.env.GROK_API_KEY
 
@@ -31,9 +33,17 @@ IMPORTANT: Format your response in clear, well-structured paragraphs for easy re
       long: '20-1000 sentences'
     }
 
-    const userPrompt = `Generate a prompt about "${topic}" with a ${tone} tone. 
-The prompt should be ${lengthMap[length] || 'medium length'}. 
-Format it as a ${style} prompt that is clear and ready to use.`
+    let userPrompt = `Generate a prompt about "${topic}" with a ${tone} tone.`;
+
+    if (targetAudience) {
+      userPrompt += ` The target audience is ${targetAudience}.`;
+    }
+
+    if (keyFocusAreas) {
+      userPrompt += ` Focus on these key areas: ${keyFocusAreas}.`;
+    }
+
+    userPrompt += ` The prompt should be ${lengthMap[length] || 'medium length'}. Format it as a ${style} prompt that is clear and ready to use.`;
 
     // Debug: Log the full prompt being sent to AI
     console.log('[DEBUG] Full userPrompt being sent to AI:', userPrompt)
