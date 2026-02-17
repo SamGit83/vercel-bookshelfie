@@ -10,6 +10,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Debug: Log incoming form data
+    console.log('[DEBUG] Form data received:', { topic, tone, length, style })
+
     const apiKey = process.env.GROK_API_KEY
 
     if (!apiKey) {
@@ -29,6 +32,10 @@ export default async function handler(req, res) {
     const userPrompt = `Generate a prompt about "${topic}" with a ${tone} tone. 
 The prompt should be ${lengthMap[length] || 'medium length'}. 
 Format it as a ${style} prompt that is clear and ready to use.`
+
+    // Debug: Log the full prompt being sent to AI
+    console.log('[DEBUG] Full userPrompt being sent to AI:', userPrompt)
+    console.log('[DEBUG] userPrompt length:', userPrompt.length, 'characters')
 
     // Call Grok AI API
     const response = await fetch('https://api.x.ai/v1/chat/completions', {

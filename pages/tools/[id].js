@@ -71,6 +71,9 @@ function AIPromptGenerator() {
     setError('')
     setGeneratedPrompt('')
 
+    // Debug: Log what values are being submitted
+    console.log('[DEBUG] Submitting form data:', formData)
+
     try {
       const response = await fetch('/api/generate-prompt', {
         method: 'POST',
@@ -213,9 +216,9 @@ function AIPromptGenerator() {
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                 >
-                  <option value="short">Short (1-2 sentences)</option>
-                  <option value="medium">Medium (3-5 sentences)</option>
-                  <option value="long">Long (6+ sentences)</option>
+                  <option value="short">Short (1-10 sentences)</option>
+                  <option value="medium">Medium (10-20 sentences)</option>
+                  <option value="long">Long (20-1000 sentences)</option>
                 </select>
               </div>
 
