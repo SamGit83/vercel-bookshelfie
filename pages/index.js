@@ -47,6 +47,21 @@ export default function Home() {
         </div>
       </section>
 
+      {/* UserJourney */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <UserJourney />
+      </section>
+
+      {/* Benefits */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <Benefits />
+      </section>
+
+      {/* HowItWorks */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <HowItWorks />
+      </section>
+
       {/* Tools */}
       <section id="tools" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
         <div className="mb-10">
