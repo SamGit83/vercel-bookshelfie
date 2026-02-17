@@ -47,18 +47,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* UserJourney */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* User Journey */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <UserJourney />
       </section>
 
       {/* Benefits */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <Benefits />
       </section>
 
-      {/* HowItWorks */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* How It Works */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <HowItWorks />
       </section>
 
