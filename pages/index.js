@@ -47,8 +47,13 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Gradient divider line */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-px bg-gradient-to-r from-transparent via-brand-300 to-transparent" />
+      </div>
+
       {/* User Journey */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <UserJourney />
       </section>
 
@@ -61,6 +66,11 @@ export default function Home() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <HowItWorks />
       </section>
+
+      {/* Gradient divider line */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="h-px bg-gradient-to-r from-transparent via-brand-300 to-transparent" />
+      </div>
 
       {/* Tools */}
       <section id="tools" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
