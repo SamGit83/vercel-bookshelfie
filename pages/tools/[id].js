@@ -298,7 +298,11 @@ function AIPromptGenerator() {
             {generatedPrompt && (
               <div className="space-y-6">
                 <div className="p-6 bg-gray-50 rounded-lg border border-gray-200">
-                  <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{generatedPrompt}</p>
+                  {generatedPrompt.split('\n\n').map((paragraph, index) => (
+                    <p key={index} className="text-gray-800 leading-relaxed mb-4 last:mb-0">
+                      {paragraph}
+                    </p>
+                  ))}
                 </div>
 
                 {/* Action Buttons */}

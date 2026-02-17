@@ -20,7 +20,9 @@ export default async function handler(req, res) {
     }
 
     // Construct the prompt for Grok
-    const systemPrompt = `You are a creative AI prompt generator. Generate a high-quality, detailed prompt based on the user's specifications. The prompt should be clear, engaging, and ready to use.`
+    const systemPrompt = `You are a creative AI prompt generator. Generate a high-quality, detailed prompt based on the user's specifications. The prompt should be clear, engaging, and ready to use.
+
+IMPORTANT: Format your response in clear, well-structured paragraphs for easy reading. Use double line breaks between paragraphs. Each paragraph should focus on a distinct aspect or idea.`
     
     // Map qualitative length to explicit sentence counts
     const lengthMap = {
