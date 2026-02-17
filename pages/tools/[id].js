@@ -195,7 +195,7 @@ function AIPromptGenerator() {
                   name="tone"
                   value={formData.tone}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
                 >
                   <option value="professional">Professional</option>
                   <option value="casual">Casual</option>
@@ -216,7 +216,7 @@ function AIPromptGenerator() {
                   name="length"
                   value={formData.length}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
                 >
                   <option value="short">Short (1-10 sentences)</option>
                   <option value="medium">Medium (10-20 sentences)</option>
@@ -234,7 +234,7 @@ function AIPromptGenerator() {
                   name="style"
                   value={formData.style}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full h-[42px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
                 >
                   <option value="creative">Creative</option>
                   <option value="analytical">Analytical</option>
