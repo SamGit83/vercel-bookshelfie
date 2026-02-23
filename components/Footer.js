@@ -29,6 +29,13 @@ export default function Footer() {
                 <li><Link href="/contact" className="text-sm text-gray-500 hover:text-brand-600 transition-colors">Contact</Link></li>
               </ul>
             </div>
+            <div>
+              <h4 className="text-sm font-semibold text-gray-900 mb-3">Social</h4>
+              <ul className="space-y-2">
+                <li><a href="https://x.com/bookshelfieapp" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-brand-600 transition-colors">X</a></li>
+                <li><a href="https://linkedin.com/company/bookshelfie" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-500 hover:text-brand-600 transition-colors">LinkedIn</a></li>
+              </ul>
+            </div>
           </div>
         </div>
         

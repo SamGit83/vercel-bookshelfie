@@ -55,6 +55,16 @@ export default function Header() {
               Home
             </Link>
             <Link
+              href="/free-tools"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/free-tools') 
+                  ? 'bg-brand-50 text-brand-700' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              Free Tools
+            </Link>
+            <Link
               href="/contact"
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/contact') 
