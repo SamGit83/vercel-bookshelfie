@@ -1,69 +1,182 @@
 /**
  * Book Recommendation Quiz API
- * Accepts POST { answers: { mood, genre, pace, protagonist, setting, length, goal, audience } }
- * Uses Google Books API to search for books matching user preferences
- * Returns { books: [ { id, title, authors, description, thumbnail, previewLink } ] }
+ * Hybrid approach:
+ * 1. Uses Grok AI to generate intelligent book recommendations (title, author, description)
+ * 2. Uses Google Books API only to fetch cover images for those books
+ * 
+ * Input: POST { answers: { mood, genre, pace, protagonist, setting, length, goal, audience } }
+ * Output: { books: [ { id, title, authors, description, thumbnail, previewLink } ] }
  */
 
 const ALLOWED_QUESTION_IDS = ['mood', 'genre', 'pace', 'protagonist', 'setting', 'length', 'goal', 'audience']
 
-// Maps for converting quiz answers to search keywords
+// Maps for converting quiz answers to search keywords (for Grok prompt)
 const genreMap = {
-  'fantasy': 'fantasy fiction',
+  'fantasy': 'fantasy',
   'sci-fi': 'science fiction',
-  'mystery': 'mystery fiction',
+  'mystery': 'mystery',
   'thriller': 'thriller',
-  'romance': 'romance novel',
-  'horror': 'horror fiction',
-  'non-fiction': 'nonfiction',
+  'romance': 'romance',
+  'horror': 'horror',
+  'non-fiction': 'non-fiction',
   'biography': 'biography',
-  'self-help': 'self help',
-  'history': 'historical',
+  'self-help': 'self-help',
+  'history': 'history',
   'business': 'business',
   'poetry': 'poetry',
 }
 
 const moodMap = {
-  'feel-good': 'feel good',
-  'dark': 'dark fiction',
-  'uplifting': 'inspirational',
-  'tense': 'suspense',
+  'feel-good': 'feel-good',
+  'dark': 'dark',
+  'uplifting': 'uplifting',
+  'tense': 'tense',
   'wholesome': 'wholesome',
-  'adventurous': 'adventure',
-  'thought-provoking': 'intellectual',
-  'funny': 'humor',
+  'adventurous': 'adventurous',
+  'thought-provoking': 'thought-provoking',
+  'funny': 'funny',
   'emotional': 'emotional',
-  'action-packed': 'action',
+  'action-packed': 'action-packed',
 }
 
 const paceMap = {
-  'fast': 'fast paced',
+  'fast': 'fast-paced',
   'medium': 'moderate pace',
-  'slow': 'slow burn',
+  'slow': 'slow-burn',
 }
 
 const lengthMap = {
-  'short': 'short book',
-  'medium': 'novel',
-  'long': 'long novel',
-  'epic': 'epic',
+  'short': 'short (under 200 pages)',
+  'medium': 'medium length (200-400 pages)',
+  'long': 'long (400-600 pages)',
+  'epic': 'epic (over 600 pages)',
 }
 
 const protagonistMap = {
   'strong-female': 'strong female protagonist',
-  'strong-male': 'male protagonist',
+  'strong-male': 'strong male protagonist',
   'group': 'ensemble cast',
   'unlikely-hero': 'unlikely hero',
-  'anti-hero': 'antihero',
-  'everyday': 'ordinary protagonist',
+  'anti-hero': 'anti-hero',
+  'everyday': 'everyday ordinary protagonist',
 }
 
 const audienceMap = {
-  'general': '',
+  'general': 'general audience',
   'young-adult': 'young adult',
-  'adult': 'adult fiction',
+  'adult': 'adult',
   'mature': 'mature',
   'teen': 'teen',
+}
+
+/**
+ * Fetches cover image and preview link from Google Books API for a single book
+ * @param {string} title - Book title
+ * @param {string} author - Book author
+ * @param {string} apiKey - Google Books API key
+ * @returns {Promise<{thumbnail: string|null, previewLink: string|null}>}
+ */
+async function fetchBookCover(title, author, apiKey) {
+  try {
+    // Search by title and author
+    const query = `intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author)}`
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1&printType=books&langRestrict=en&key=${apiKey}`
+    
+    const response = await fetch(url)
+    
+    if (!response.ok) {
+      console.log(`[book-quiz] Google Books cover fetch failed for "${title}" - HTTP ${response.status}`)
+      return { thumbnail: null, previewLink: null }
+    }
+    
+    const data = await response.json()
+    
+    if (!data.items || data.items.length === 0) {
+      console.log(`[book-quiz] No Google Books result for "${title}" by ${author}`)
+      return { thumbnail: null, previewLink: null }
+    }
+    
+    const volumeInfo = data.items[0].volumeInfo || {}
+    const thumbnail = volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || null
+    const previewLink = volumeInfo.previewLink || null
+    
+    return { thumbnail, previewLink }
+  } catch (error) {
+    console.log(`[book-quiz] Error fetching cover for "${title}":`, error.message)
+    return { thumbnail: null, previewLink: null }
+  }
+}
+
+/**
+ * Parses Grok's JSON response to extract book recommendations
+ * @param {string} content - The raw content from Grok response
+ * @returns {Array<{title: string, author: string, description: string}>}
+ */
+function parseGrokBooksResponse(content) {
+  const books = []
+  
+  // Try to extract JSON array from the response
+  // Grok might return markdown code blocks, plain JSON, or text with JSON
+  
+  // First, try to find JSON array in the content
+  let jsonMatch = content.match(/\[[\s\S]*?\](?=\s*$|\s*```)/)
+  
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0])
+      if (Array.isArray(parsed)) {
+        return parsed
+      }
+    } catch (e) {
+      // Try to fix common JSON issues
+      try {
+        // Remove markdown code blocks if present
+        const cleaned = jsonMatch[0].replace(/```json/g, '').replace(/```/g, '').trim()
+        const parsed = JSON.parse(cleaned)
+        if (Array.isArray(parsed)) {
+          return parsed
+        }
+      } catch (e2) {
+        console.log('[book-quiz] Could not parse JSON from Grok response')
+      }
+    }
+  }
+  
+  // If JSON parsing fails, try to extract book info from text
+  // Look for patterns like "1. Title by Author - Description"
+  const lines = content.split('\n').filter(line => line.trim())
+  
+  for (const line of lines) {
+    // Try to match pattern: "Title by Author" or "Title - Author" or "Title, Author"
+    // Then capture description after
+    
+    // Match numbered list items like "1. Book Title by Author"
+    const numberedMatch = line.match(/^\d+[.)]\s*(.+?)\s+(?:by|written by|by author of)\s+([^\-\n]+)(?:\s*[-–—]\s*(.+))?$/i)
+    if (numberedMatch) {
+      const title = numberedMatch[1].trim()
+      const author = numberedMatch[2].trim()
+      const description = numberedMatch[3]?.trim() || 'No description available.'
+      
+      if (title && author && title.length > 2) {
+        books.push({ title, author, description: description.substring(0, 300) })
+      }
+      continue
+    }
+    
+    // Match patterns like "Book Title - Author - Description"
+    const dashMatch = line.match(/^(.+?)\s*[-–—]\s*([^\-]+?)(?:\s*[-–—]\s*(.+))?$/)
+    if (dashMatch && dashMatch[1].length > 2) {
+      const title = dashMatch[1].trim()
+      const author = dashMatch[2].trim()
+      const description = dashMatch[3]?.trim() || 'No description available.'
+      
+      if (title && author && title.length > 2 && !title.match(/^(recommended|here are|books like)/i)) {
+        books.push({ title, author, description: description.substring(0, 300) })
+      }
+    }
+  }
+  
+  return books
 }
 
 export default async function handler(req, res) {
@@ -88,182 +201,173 @@ export default async function handler(req, res) {
   }
 
   try {
-    const apiKey = process.env.GOOGLE_BOOKS_API_KEY
+    const grokApiKey = process.env.GROK_API_KEY
+    const googleBooksApiKey = process.env.GOOGLE_BOOKS_API_KEY
 
-    // DEBUG: Log whether API key is present
-    console.log('[book-quiz] API key present:', !!apiKey)
-    if (apiKey) {
-      console.log('[book-quiz] API key first 5 chars:', apiKey.substring(0, 5))
-    } else {
-      console.log('[book-quiz] ERROR: GOOGLE_BOOKS_API_KEY is not set in environment')
+    if (!grokApiKey) {
+      return res.status(500).json({ error: 'GROK_API_KEY is not configured' })
     }
 
-    // Build search query from answers using space-separated keywords
-    const searchTerms = []
-
-    // Add genre keywords
+    // Build user preferences description for Grok
+    const preferences = []
+    
     const genre = answers.genre?.toLowerCase().trim()
     if (genre && genreMap[genre]) {
-      searchTerms.push(genreMap[genre])
+      preferences.push(`Genre: ${genreMap[genre]}`)
     }
-
-    // Add mood keywords
+    
     const mood = answers.mood?.toLowerCase().trim()
     if (mood && moodMap[mood]) {
-      searchTerms.push(moodMap[mood])
+      preferences.push(`Mood: ${moodMap[mood]}`)
     }
-
-    // Add pace keywords
+    
     const pace = answers.pace?.toLowerCase().trim()
     if (pace && paceMap[pace]) {
-      searchTerms.push(paceMap[pace])
+      preferences.push(`Pace: ${paceMap[pace]}`)
     }
-
-    // Add length keywords
+    
     const length = answers.length?.toLowerCase().trim()
     if (length && lengthMap[length]) {
-      searchTerms.push(lengthMap[length])
+      preferences.push(`Length: ${lengthMap[length]}`)
     }
-
-    // Add protagonist type keywords
+    
     const protagonist = answers.protagonist?.toLowerCase().trim()
     if (protagonist && protagonistMap[protagonist]) {
-      searchTerms.push(protagonistMap[protagonist])
+      preferences.push(`Protagonist: ${protagonistMap[protagonist]}`)
     }
-
-    // Add audience keywords
+    
     const audience = answers.audience?.toLowerCase().trim()
     if (audience && audienceMap[audience]) {
-      searchTerms.push(audienceMap[audience])
+      preferences.push(`Audience: ${audienceMap[audience]}`)
     }
 
-    // Fallback: use mood and genre directly if no mapping found
-    if (searchTerms.length < 2) {
-      if (genre && !searchTerms.includes(genre)) {
-        searchTerms.push(genre)
-      }
-      if (mood && !searchTerms.includes(mood)) {
-        searchTerms.push(mood)
-      }
+    const preferencesText = preferences.join(', ') || 'general fiction preferences'
+    
+    console.log('[book-quiz] Generating recommendations for:', preferencesText)
+
+    // Call Grok API to get book recommendations
+    const systemPrompt = `You are a knowledgeable book recommendation expert. Based on the user's preferences, recommend 8-10 books that match their tastes. 
+
+IMPORTANT: Your response MUST be a valid JSON array of objects. Each object must have exactly these fields:
+- "title": The book title
+- "author": The author's name  
+- "description": A brief 1-2 sentence description of the book (max 200 characters)
+
+Return ONLY the JSON array, no additional text, no markdown code blocks.`
+
+    const userPrompt = `Recommend 8-10 books based on these preferences: ${preferencesText}. 
+
+Return a JSON array with each book containing title, author, and a brief description.`
+
+    const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${grokApiKey}`,
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        model: 'grok-3-mini',
+        stream: false,
+        temperature: 0.7,
+      }),
+    })
+
+    if (!grokResponse.ok) {
+      const errorData = await grokResponse.json().catch(() => ({}))
+      console.error('[book-quiz] Grok API error:', errorData)
+      throw new Error(`Grok API error: ${grokResponse.status}`)
     }
 
-    // Construct the search query
-    const query = searchTerms.join(' ')
-    
-    if (!query) {
-      return res.status(400).json({ error: 'Could not build search query from answers' })
+    const grokData = await grokResponse.json()
+    const grokContent = grokData.choices?.[0]?.message?.content
+
+    if (!grokContent) {
+      throw new Error('No recommendations generated from Grok')
     }
 
-    console.log('[book-quiz] Google Books query:', query)
+    console.log('[book-quiz] Grok response received, parsing books...')
 
-    // Call Google Books API
-    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books&langRestrict=en&key=${apiKey}`
-    
-    // DEBUG: Log the URL with API key redacted for security
-    const urlRedacted = url.replace(apiKey, 'REDACTED')
-    console.log('[book-quiz] Google Books API URL:', urlRedacted)
-    
-    const response = await fetch(url)
+    // Parse Grok response to extract book recommendations
+    let grokBooks = parseGrokBooksResponse(grokContent)
 
-    // Handle specific API errors - read the full error response from Google
-    if (response.status === 401 || response.status === 403) {
-      // Read the error response body to get the actual error message from Google
-      const errorText = await response.text()
-      console.error('[book-quiz] Google Books API auth error - Status:', response.status)
-      console.error('[book-quiz] Google Books API auth error - Response:', errorText)
-      
-      // Try to parse as JSON to get structured error
-      let errorMessage = 'Book search service authentication failed'
+    if (grokBooks.length === 0) {
+      console.log('[book-quiz] Could not parse books from Grok response, attempting JSON parse...')
+      // Last attempt: try to parse entire response as JSON
       try {
-        const errorJson = JSON.parse(errorText)
-        if (errorJson.error) {
-          errorMessage = errorJson.error.message || errorJson.error.message || JSON.stringify(errorJson.error)
-          console.error('[book-quiz] Parsed Google error message:', errorMessage)
+        const cleaned = grokContent.replace(/```json/g, '').replace(/```/g, '').trim()
+        const parsed = JSON.parse(cleaned)
+        if (Array.isArray(parsed)) {
+          grokBooks = parsed
         }
-      } catch (parseErr) {
-        console.error('[book-quiz] Could not parse error response as JSON')
+      } catch (e) {
+        console.log('[book-quiz] Final JSON parse attempt failed')
       }
-      
-      return res.status(500).json({ error: errorMessage + ' (HTTP ' + response.status + ')' })
     }
 
-    if (response.status === 429) {
-      const errorText = await response.text()
-      console.error('[book-quiz] Google Books API rate limit error - Status:', response.status)
-      console.error('[book-quiz] Google Books API rate limit error - Response:', errorText)
-      return res.status(500).json({ error: 'Book search service rate limit exceeded. Please try again later.' })
+    if (grokBooks.length === 0) {
+      return res.status(200).json({ 
+        books: [], 
+        message: 'Could not generate book recommendations. Please try again!' 
+      })
     }
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[book-quiz] Google Books API error - Status:', response.status)
-      console.error('[book-quiz] Google Books API error - Response:', errorText)
+    console.log(`[book-quiz] Parsed ${grokBooks.length} books from Grok, fetching covers...`)
+
+    // For each book, fetch cover image from Google Books
+    const finalBooks = []
+    
+    for (let i = 0; i < grokBooks.length; i++) {
+      const book = grokBooks[i]
       
-      // Try to parse as JSON to get structured error message
-      let errorDetails = ''
-      try {
-        const errorData = JSON.parse(errorText)
-        if (errorData.error && errorData.error.message) {
-          errorDetails = errorData.error.message
-          console.error('[book-quiz] Parsed Google error message:', errorDetails)
+      // Ensure we have required fields
+      const title = book.title?.trim()
+      const author = book.author?.trim()
+      const description = book.description?.trim() || 'No description available.'
+      
+      if (!title || !author) {
+        console.log(`[book-quiz] Skipping book with missing title/author:`, book)
+        continue
+      }
+
+      // Fetch cover from Google Books (if API key available)
+      let thumbnail = null
+      let previewLink = null
+      
+      if (googleBooksApiKey) {
+        const coverData = await fetchBookCover(title, author, googleBooksApiKey)
+        thumbnail = coverData.thumbnail
+        previewLink = coverData.previewLink
+        
+        if (thumbnail) {
+          console.log(`[book-quiz] Got cover for "${title}"`)
         }
-      } catch (parseErr) {
-        errorDetails = errorText.substring(0, 200)
+      } else {
+        console.log('[book-quiz] No Google Books API key available, skipping cover fetch')
       }
-      throw new Error(`Google Books API error: ${response.status} - ${errorDetails}`)
-    }
 
-    const data = await response.json()
+      // Create unique ID
+      const id = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}-${author.toLowerCase().replace(/[^a-z0-9]+/g, '').substring(0, 10)}`
 
-    if (!data.items || data.items.length === 0) {
-      return res.status(200).json({ books: [], message: 'No books found for your preferences. Try different answers!' })
-    }
-
-    // Deduplicate and normalize books
-    const seen = new Set()
-    const normalised = []
-
-    for (const item of data.items) {
-      const volumeInfo = item.volumeInfo || {}
-      
-      // Skip if no title
-      if (!volumeInfo.title) continue
-
-      // Create unique identifier
-      const title = volumeInfo.title.trim()
-      const authors = volumeInfo.authors || ['Unknown Author']
-      const id = item.id || `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}-${(authors[0] || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '').substring(0, 10)}`
-
-      // Skip duplicates based on title+author
-      const key = `${title.toLowerCase()}-${(authors[0] || '').toLowerCase()}`
-      if (seen.has(key)) continue
-      seen.add(key)
-
-      // Get description (truncated)
-      const rawDescription = typeof volumeInfo.description === 'string' ? volumeInfo.description.trim() : ''
-      const description = rawDescription ? rawDescription.substring(0, 300) : 'No description available.'
-
-      // Get thumbnail
-      const thumbnail = volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || null
-
-      // Get preview link
-      const previewLink = volumeInfo.previewLink || null
-
-      normalised.push({
+      finalBooks.push({
         id,
         title,
-        authors,
-        description,
+        authors: [author],
+        description: description.substring(0, 300),
         thumbnail,
         previewLink,
       })
 
-      if (normalised.length >= 10) break
+      // Limit to 10 books
+      if (finalBooks.length >= 10) break
     }
 
-    console.log('[book-quiz] Found books:', normalised.length)
+    console.log('[book-quiz] Final book count:', finalBooks.length)
 
-    return res.status(200).json({ books: normalised })
+    return res.status(200).json({ books: finalBooks })
   } catch (error) {
     console.error('[book-quiz] Error:', error)
     return res.status(500).json({ error: error.message || 'Failed to generate book recommendations' })
