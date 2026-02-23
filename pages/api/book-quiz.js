@@ -70,7 +70,52 @@ const audienceMap = {
 }
 
 /**
- * Fetches cover image and preview link from Google Books API for a single book
+ * Fetches cover image and preview link from Open Library as a fallback
+ * @param {string} title - Book title
+ * @param {string} author - Book author
+ * @returns {Promise<{thumbnail: string|null, previewLink: string|null}>}
+ */
+async function fetchBookCoverFromOpenLibrary(title, author) {
+  try {
+    const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&limit=1`
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      console.log(`[book-quiz] Open Library cover fetch failed for "${title}" - HTTP ${response.status}`)
+      return { thumbnail: null, previewLink: null }
+    }
+
+    const data = await response.json()
+
+    if (!data.docs || data.docs.length === 0) {
+      console.log(`[book-quiz] No Open Library result for "${title}" by ${author}`)
+      return { thumbnail: null, previewLink: null }
+    }
+
+    const doc = data.docs[0]
+    const coverId = doc.cover_i
+    const workKey = doc.key // e.g. "/works/OL45804W"
+
+    const thumbnail = coverId
+      ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
+      : null
+
+    let previewLink = null
+    if (workKey) {
+      const olid = workKey.replace('/works/', '')
+      previewLink = `https://openlibrary.org/works/${olid}`
+    }
+
+    return { thumbnail, previewLink }
+  } catch (error) {
+    console.log(`[book-quiz] Open Library error for "${title}":`, error.message)
+    return { thumbnail: null, previewLink: null }
+  }
+}
+
+/**
+ * Fetches cover image and preview link for a single book.
+ * First tries Google Books API; falls back to Open Library on any failure.
  * @param {string} title - Book title
  * @param {string} author - Book author
  * @param {string} apiKey - Google Books API key
@@ -81,29 +126,29 @@ async function fetchBookCover(title, author, apiKey) {
     // Search by title and author
     const query = `intitle:${encodeURIComponent(title)}+inauthor:${encodeURIComponent(author)}`
     const url = `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1&printType=books&langRestrict=en&key=${apiKey}`
-    
+
     const response = await fetch(url)
-    
+
     if (!response.ok) {
-      console.log(`[book-quiz] Google Books cover fetch failed for "${title}" - HTTP ${response.status}`)
-      return { thumbnail: null, previewLink: null }
+      console.log(`[book-quiz] Google Books cover fetch failed for "${title}" - HTTP ${response.status}, trying Open Library...`)
+      return fetchBookCoverFromOpenLibrary(title, author)
     }
-    
+
     const data = await response.json()
-    
+
     if (!data.items || data.items.length === 0) {
-      console.log(`[book-quiz] No Google Books result for "${title}" by ${author}`)
-      return { thumbnail: null, previewLink: null }
+      console.log(`[book-quiz] No Google Books result for "${title}" by ${author}, trying Open Library...`)
+      return fetchBookCoverFromOpenLibrary(title, author)
     }
-    
+
     const volumeInfo = data.items[0].volumeInfo || {}
     const thumbnail = volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || null
     const previewLink = volumeInfo.previewLink || null
-    
+
     return { thumbnail, previewLink }
   } catch (error) {
-    console.log(`[book-quiz] Error fetching cover for "${title}":`, error.message)
-    return { thumbnail: null, previewLink: null }
+    console.log(`[book-quiz] Google Books error for "${title}":`, error.message, '— trying Open Library...')
+    return fetchBookCoverFromOpenLibrary(title, author)
   }
 }
 
