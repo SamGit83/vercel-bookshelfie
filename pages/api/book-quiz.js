@@ -90,8 +90,12 @@ export default async function handler(req, res) {
   try {
     const apiKey = process.env.GOOGLE_BOOKS_API_KEY
 
-    if (!apiKey) {
-      throw new Error('GOOGLE_BOOKS_API_KEY is not configured')
+    // DEBUG: Log whether API key is present
+    console.log('[book-quiz] API key present:', !!apiKey)
+    if (apiKey) {
+      console.log('[book-quiz] API key first 5 chars:', apiKey.substring(0, 5))
+    } else {
+      console.log('[book-quiz] ERROR: GOOGLE_BOOKS_API_KEY is not set in environment')
     }
 
     // Build search query from answers using space-separated keywords
@@ -155,23 +159,58 @@ export default async function handler(req, res) {
     // Call Google Books API
     const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books&langRestrict=en&key=${apiKey}`
     
+    // DEBUG: Log the URL with API key redacted for security
+    const urlRedacted = url.replace(apiKey, 'REDACTED')
+    console.log('[book-quiz] Google Books API URL:', urlRedacted)
+    
     const response = await fetch(url)
 
-    // Handle specific API errors
+    // Handle specific API errors - read the full error response from Google
     if (response.status === 401 || response.status === 403) {
-      console.error('[book-quiz] Google Books API authentication error:', response.status)
-      return res.status(500).json({ error: 'Book search service authentication failed. Please contact the site administrator.' })
+      // Read the error response body to get the actual error message from Google
+      const errorText = await response.text()
+      console.error('[book-quiz] Google Books API auth error - Status:', response.status)
+      console.error('[book-quiz] Google Books API auth error - Response:', errorText)
+      
+      // Try to parse as JSON to get structured error
+      let errorMessage = 'Book search service authentication failed'
+      try {
+        const errorJson = JSON.parse(errorText)
+        if (errorJson.error) {
+          errorMessage = errorJson.error.message || errorJson.error.message || JSON.stringify(errorJson.error)
+          console.error('[book-quiz] Parsed Google error message:', errorMessage)
+        }
+      } catch (parseErr) {
+        console.error('[book-quiz] Could not parse error response as JSON')
+      }
+      
+      return res.status(500).json({ error: errorMessage + ' (HTTP ' + response.status + ')' })
     }
 
     if (response.status === 429) {
-      console.error('[book-quiz] Google Books API rate limit error:', response.status)
+      const errorText = await response.text()
+      console.error('[book-quiz] Google Books API rate limit error - Status:', response.status)
+      console.error('[book-quiz] Google Books API rate limit error - Response:', errorText)
       return res.status(500).json({ error: 'Book search service rate limit exceeded. Please try again later.' })
     }
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('[book-quiz] Google Books API error:', errorData)
-      throw new Error(`Google Books API error: ${response.status}`)
+      const errorText = await response.text()
+      console.error('[book-quiz] Google Books API error - Status:', response.status)
+      console.error('[book-quiz] Google Books API error - Response:', errorText)
+      
+      // Try to parse as JSON to get structured error message
+      let errorDetails = ''
+      try {
+        const errorData = JSON.parse(errorText)
+        if (errorData.error && errorData.error.message) {
+          errorDetails = errorData.error.message
+          console.error('[book-quiz] Parsed Google error message:', errorDetails)
+        }
+      } catch (parseErr) {
+        errorDetails = errorText.substring(0, 200)
+      }
+      throw new Error(`Google Books API error: ${response.status} - ${errorDetails}`)
     }
 
     const data = await response.json()
