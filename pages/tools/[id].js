@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -402,6 +403,388 @@ function AIPromptGenerator() {
   )
 }
 
+const QUIZ_QUESTIONS = [
+  {
+    id: 'mood',
+    question: "What's your vibe right now?",
+    options: [
+      { emoji: '😊', label: 'Feel-good & uplifting' },
+      { emoji: '🌑', label: 'Dark & intense' },
+      { emoji: '😂', label: 'Funny & light' },
+      { emoji: '🤔', label: 'Thought-provoking' },
+    ],
+  },
+  {
+    id: 'genre',
+    question: 'Pick your genre',
+    options: [
+      { emoji: '🧙', label: 'Fantasy & Sci-Fi' },
+      { emoji: '🔍', label: 'Mystery & Thriller' },
+      { emoji: '💕', label: 'Romance' },
+      { emoji: '📖', label: 'Literary Fiction' },
+      { emoji: '🌍', label: 'Non-fiction' },
+    ],
+  },
+  {
+    id: 'pace',
+    question: 'How fast do you like your reads?',
+    options: [
+      { emoji: '⚡', label: 'Fast-paced page-turner' },
+      { emoji: '🌊', label: 'Slow & immersive' },
+      { emoji: '⚖️', label: 'Balanced mix' },
+    ],
+  },
+  {
+    id: 'protagonist',
+    question: "Who's the story about?",
+    options: [
+      { emoji: '👤', label: 'A lone hero on a quest' },
+      { emoji: '👥', label: 'A group of friends/found family' },
+      { emoji: '💑', label: 'Two people falling in love' },
+      { emoji: '🌐', label: 'Society / big ideas' },
+    ],
+  },
+  {
+    id: 'setting',
+    question: 'What setting excites you?',
+    options: [
+      { emoji: '🏰', label: 'Magical / fantasy world' },
+      { emoji: '🌆', label: 'Modern city life' },
+      { emoji: '🕰️', label: 'Historical past' },
+      { emoji: '🚀', label: 'Future / space' },
+    ],
+  },
+  {
+    id: 'length',
+    question: 'How long is your attention span right now?',
+    options: [
+      { emoji: '📗', label: 'Short (under 300 pages)' },
+      { emoji: '📘', label: 'Medium (300–500 pages)' },
+      { emoji: '📕', label: 'Long (500+ pages, bring it on)' },
+    ],
+  },
+  {
+    id: 'goal',
+    question: 'What do you want from this book?',
+    options: [
+      { emoji: '🎢', label: 'Escapism & adventure' },
+      { emoji: '💡', label: 'Learn something new' },
+      { emoji: '😢', label: 'Feel all the emotions' },
+      { emoji: '😌', label: 'Comfort & coziness' },
+    ],
+  },
+  {
+    id: 'audience',
+    question: 'Who are you reading for?',
+    options: [
+      { emoji: '🧒', label: "I'm a teen / young adult" },
+      { emoji: '🧑', label: "I'm an adult (20s–30s)" },
+      { emoji: '🧓', label: "I'm older (40s+)" },
+      { emoji: '👨‍👩‍👧', label: 'Reading with my kids' },
+    ],
+  },
+]
+
+function BookRecommendationQuiz() {
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [answers, setAnswers] = useState({})
+  const [phase, setPhase] = useState('quiz') // 'quiz' | 'loading' | 'results'
+  const [books, setBooks] = useState([])
+  const [error, setError] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [animating, setAnimating] = useState(false)
+  const submitting = useRef(false)
+
+  const totalQuestions = QUIZ_QUESTIONS.length
+  const progress = ((currentQuestion) / totalQuestions) * 100
+
+  const handleAnswer = async (questionId, optionLabel) => {
+    if (submitting.current) return
+    const newAnswers = { ...answers, [questionId]: optionLabel }
+    setAnswers(newAnswers)
+
+    if (currentQuestion < totalQuestions - 1) {
+      setAnimating(true)
+      setTimeout(() => {
+        setCurrentQuestion((prev) => prev + 1)
+        setAnimating(false)
+      }, 250)
+    } else {
+      // Last question answered — fetch recommendations
+      submitting.current = true
+      setPhase('loading')
+      try {
+        const res = await fetch('/api/book-quiz', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ answers: newAnswers }),
+        })
+        const data = await res.json()
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch recommendations')
+        setBooks(data.books || [])
+        setPhase('results')
+      } catch (err) {
+        setError(err.message || 'Something went wrong. Please try again.')
+        setPhase('results')
+      } finally {
+        submitting.current = false
+      }
+    }
+  }
+
+  const retakeQuiz = () => {
+    setCurrentQuestion(0)
+    setAnswers({})
+    setPhase('quiz')
+    setBooks([])
+    setError(null)
+    setCopied(false)
+  }
+
+  const shareCaption = `I just discovered my next 8 reads with Bookshelfie's Book Quiz! 📚✨ Try it free at https://bookshelfie.app #BookRecommendations #Bookshelfie`
+
+  const copyCaption = async () => {
+    try {
+      await navigator.clipboard.writeText(shareCaption)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // fallback: do nothing
+    }
+  }
+
+  const shareOnTwitter = () => {
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareCaption)}`,
+      '_blank'
+    )
+  }
+
+  const openSnapchat = () => {
+    window.open('https://www.snapchat.com/scan', '_blank')
+  }
+
+  // ── Loading phase ──────────────────────────────────────────────────────────
+  if (phase === 'loading') {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="text-6xl mb-6 animate-bounce">📚</div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-3">Finding your perfect books…</h2>
+        <p className="text-gray-500 text-lg">Searching through thousands of titles just for you</p>
+        <div className="mt-8 flex gap-2">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-3 h-3 rounded-full bg-indigo-400 animate-bounce"
+              style={{ animationDelay: `${i * 0.15}s` }}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // ── Results phase ──────────────────────────────────────────────────────────
+  if (phase === 'results') {
+    return (
+      <div>
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="text-5xl mb-4">🎉</div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Your Book Picks Are In!</h2>
+          <p className="text-gray-500 text-lg">
+            Based on your answers, here are {books.length} books we think you'll love
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm">
+            ⚠️ {error}
+          </div>
+        )}
+
+        {/* Book grid */}
+        {books.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
+            {books.map((book) => (
+              <div
+                key={book.id}
+                className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:-translate-y-1 transition-transform duration-200"
+              >
+                {/* Cover */}
+                <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 h-44 flex items-center justify-center overflow-hidden">
+                  {book.thumbnail ? (
+                    <Image
+                      src={book.thumbnail}
+                      alt={book.title}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="text-5xl">📖</span>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="p-3 flex flex-col flex-1">
+                  <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">
+                    {book.title}
+                  </h3>
+                  <p className="text-xs text-indigo-600 font-medium mb-2 line-clamp-1">
+                    {book.authors.join(', ')}
+                  </p>
+                  <p className="text-xs text-gray-500 leading-relaxed flex-1 line-clamp-3">
+                    {(book.description ?? '').substring(0, 100)}
+                    {(book.description?.length ?? 0) > 100 ? '…' : ''}
+                  </p>
+                  {book.previewLink && (
+                    <a
+                      href={book.previewLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors inline-flex items-center gap-1"
+                    >
+                      Preview on Google Books
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Share section */}
+        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 sm:p-8 mb-8">
+          <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">Share your results! 🎉</h3>
+          <p className="text-sm text-gray-500 text-center mb-6">
+            Let your friends know what you're reading next
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {/* Instagram — copy caption */}
+            <button
+              onClick={copyCaption}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 transition-opacity shadow-sm"
+            >
+              📸 {copied ? 'Caption Copied!' : 'Instagram'}
+            </button>
+
+            {/* Snapchat */}
+            <button
+              onClick={openSnapchat}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-yellow-400 text-gray-900 hover:bg-yellow-300 transition-colors shadow-sm"
+            >
+              👻 Snapchat
+            </button>
+
+            {/* Twitter/X */}
+            <button
+              onClick={shareOnTwitter}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-gray-900 text-white hover:bg-gray-700 transition-colors shadow-sm"
+            >
+              🐦 Twitter / X
+            </button>
+          </div>
+        </div>
+
+        {/* Retake */}
+        <div className="text-center">
+          <button
+            onClick={retakeQuiz}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors border border-indigo-200"
+          >
+            🔄 Retake Quiz
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Quiz phase ─────────────────────────────────────────────────────────────
+  const q = QUIZ_QUESTIONS[currentQuestion]
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+          📚 Book Recommendation Quiz
+        </h1>
+        <p className="text-gray-500 text-lg">
+          Answer 8 quick questions and get your perfect reading list
+        </p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-indigo-600">
+            Question {currentQuestion + 1} of {totalQuestions}
+          </span>
+          <span className="text-sm text-gray-400">{Math.round(progress)}% complete</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+          <div
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2.5 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Question card */}
+      <div
+        className={`transition-all duration-250 ${animating ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
+        style={{ transition: 'opacity 0.25s ease, transform 0.25s ease' }}
+      >
+        <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-10 mb-6">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-8 text-center">
+            {q.question}
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {q.options.map((opt) => {
+              const fullLabel = `${opt.emoji} ${opt.label}`
+              const isSelected = answers[q.id] === fullLabel
+              return (
+                <button
+                  key={opt.label}
+                  onClick={() => handleAnswer(q.id, fullLabel)}
+                  className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left font-medium transition-all duration-150 hover:border-indigo-400 hover:bg-indigo-50 active:scale-95 ${
+                    isSelected
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-800'
+                      : 'border-gray-200 bg-white text-gray-800'
+                  }`}
+                >
+                  <span className="text-2xl flex-shrink-0">{opt.emoji}</span>
+                  <span className="text-sm sm:text-base leading-snug">{opt.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Back button */}
+      {currentQuestion > 0 && (
+        <div className="text-center">
+          <button
+            onClick={() => setCurrentQuestion((prev) => prev - 1)}
+            className="text-sm text-gray-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Previous question
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function ToolDetail() {
   const router = useRouter()
   const { id } = router.query
@@ -409,6 +792,17 @@ export default function ToolDetail() {
   // Handle AI Prompt Generator specifically
   if (id === 'ai-prompt-generator') {
     return <AIPromptGenerator />
+  }
+
+  // Handle Book Recommendation Quiz
+  if (id === 'book-recommendation-quiz') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <main className="max-w-4xl mx-auto px-4 py-12">
+          <BookRecommendationQuiz />
+        </main>
+      </div>
+    )
   }
 
   const tool = id ? getToolById(id) : null
