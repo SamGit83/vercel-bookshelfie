@@ -520,6 +520,14 @@ function BookRecommendationQuiz() {
           body: JSON.stringify({ answers: newAnswers }),
         })
         const data = await res.json()
+        
+        // DEBUG: Log response details
+        console.log('[book-quiz] Response status:', res.ok)
+        console.log('[book-quiz] Books received:', data.books?.length || 0)
+        if (data.books?.length > 0) {
+          console.log('[book-quiz] First book:', JSON.stringify(data.books[0], null, 2))
+        }
+        
         if (!res.ok) throw new Error(data.error || 'Failed to fetch recommendations')
         setBooks(data.books || [])
         setPhase('results')

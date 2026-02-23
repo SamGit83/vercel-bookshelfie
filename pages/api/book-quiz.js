@@ -8,52 +8,52 @@
 const ALLOWED_QUESTION_IDS = ['mood', 'genre', 'pace', 'protagonist', 'setting', 'length', 'goal', 'audience']
 
 const genreMap = {
-  '🧙 Fantasy & Sci-Fi': 'subject:fantasy',
-  '🔍 Mystery & Thriller': 'subject:mystery+thriller',
-  '💕 Romance': 'subject:romance',
-  '📖 Literary Fiction': 'subject:literary+fiction',
-  '🌍 Non-fiction': 'subject:nonfiction',
+  '🧙 Fantasy & Sci-Fi': 'fantasy',
+  '🔍 Mystery & Thriller': 'mystery thriller',
+  '💕 Romance': 'romance',
+  '📖 Literary Fiction': 'literary fiction',
+  '🌍 Non-fiction': 'nonfiction',
 }
 
 const moodMap = {
-  '😊 Feel-good & uplifting': 'uplifting+feel-good',
-  '🌑 Dark & intense': 'dark+psychological',
-  '😂 Funny & light': 'humor+comedy',
-  '🤔 Thought-provoking': 'philosophical+thought-provoking',
+  '😊 Feel-good & uplifting': 'uplifting feel-good',
+  '🌑 Dark & intense': 'dark psychological',
+  '😂 Funny & light': 'humor comedy',
+  '🤔 Thought-provoking': 'philosophical thought-provoking',
 }
 
 const paceMap = {
-  '⚡ Fast-paced page-turner': 'thriller+action+fast-paced',
-  '🌊 Slow & immersive': 'literary+immersive',
-  '⚖️ Balanced mix': 'adventure+drama',
+  '⚡ Fast-paced page-turner': 'thriller action fast-paced',
+  '🌊 Slow & immersive': 'literary immersive',
+  '⚖️ Balanced mix': 'adventure drama',
 }
 
 const protagonistMap = {
-  '👤 A lone hero on a quest': 'hero+quest+adventure',
-  '👥 A group of friends/found family': 'found+family+friendship',
-  '💑 Two people falling in love': 'love+romance',
-  '🌐 Society / big ideas': 'society+dystopia+ideas',
+  '👤 A lone hero on a quest': 'hero quest adventure',
+  '👥 A group of friends/found family': 'found family friendship',
+  '💑 Two people falling in love': 'love romance',
+  '🌐 Society / big ideas': 'society dystopia ideas',
 }
 
 const settingMap = {
-  '🏰 Magical / fantasy world': 'subject:fantasy+magic',
-  '🌆 Modern city life': 'contemporary+urban',
-  '🕰️ Historical past': 'subject:historical+fiction',
-  '🚀 Future / space': 'subject:science+fiction+space',
+  '🏰 Magical / fantasy world': 'fantasy magic',
+  '🌆 Modern city life': 'contemporary urban',
+  '🕰️ Historical past': 'historical fiction',
+  '🚀 Future / space': 'science fiction space',
 }
 
 const goalMap = {
-  '🎢 Escapism & adventure': 'adventure+escapism',
-  '💡 Learn something new': 'nonfiction+educational',
-  '😢 Feel all the emotions': 'emotional+drama',
-  '😌 Comfort & coziness': 'cozy+comfort',
+  '🎢 Escapism & adventure': 'adventure escapism',
+  '💡 Learn something new': 'nonfiction educational',
+  '😢 Feel all the emotions': 'emotional drama',
+  '😌 Comfort & coziness': 'cozy comfort',
 }
 
 const audienceMap = {
-  "🧒 I'm a teen / young adult": 'young+adult',
-  "🧑 I'm an adult (20s–30s)": 'adult+fiction',
-  "🧓 I'm older (40s+)": 'literary+fiction',
-  '👨‍👩‍👧 Reading with my kids': 'children+family',
+  "🧒 I'm a teen / young adult": 'young adult',
+  "🧑 I'm an adult (20s–30s)": 'adult fiction',
+  "🧓 I'm older (40s+)": 'literary fiction',
+  '👨‍👩‍👧 Reading with my kids': 'children family',
 }
 
 export default async function handler(req, res) {
@@ -91,15 +91,15 @@ export default async function handler(req, res) {
 
     // Query 1: genre + mood
     const query1Parts = [genreTerm, moodTerm].filter(Boolean)
-    const query1 = query1Parts.join('+')
+    const query1 = query1Parts.join(' ')
 
     // Query 2: setting + pace + audience (fallback to genre if empty)
     const query2Parts = [settingTerm, paceTerm, audienceTerm].filter(Boolean)
-    const query2 = query2Parts.length > 0 ? query2Parts.join('+') : genreTerm
+    const query2 = query2Parts.length > 0 ? query2Parts.join(' ') : genreTerm
 
     // Query 3: goal + protagonist + genre
     const query3Parts = [goalTerm, protagonistTerm, genreTerm].filter(Boolean)
-    const query3 = query3Parts.join('+')
+    const query3 = query3Parts.join(' ')
 
     const buildUrl = (query) => {
       const base = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books&langRestrict=en`
@@ -116,6 +116,18 @@ export default async function handler(req, res) {
         })
       )
     )
+
+    // Debug: Log query results to diagnose API failures
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i]
+      if (result.status === 'rejected') {
+        console.error(`[book-quiz] Query ${i + 1} failed: ${queries[i]}`)
+        console.error(`[book-quiz] Error:`, result.reason)
+      } else {
+        const itemCount = result.value?.items?.length || 0
+        console.log(`[book-quiz] Query ${i + 1} succeeded: ${queries[i]} - returned ${itemCount} items`)
+      }
+    }
 
     // Collect and deduplicate items by id
     const seenIds = new Set()
@@ -155,6 +167,14 @@ export default async function handler(req, res) {
         categories: Array.isArray(info.categories) ? info.categories : [],
       }
     })
+
+    // DEBUG: Log final results before returning
+    console.log('[book-quiz] Queries:', queries)
+    console.log('[book-quiz] Raw items count:', allItems.length)
+    console.log('[book-quiz] Final books count:', normalised.length)
+    if (normalised.length > 0) {
+      console.log('[book-quiz] Sample book:', JSON.stringify(normalised[0], null, 2))
+    }
 
     if (normalised.length === 0) {
       return res.status(200).json({ books: [], message: 'No books found for your preferences. Try different answers!' })
