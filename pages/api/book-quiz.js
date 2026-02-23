@@ -1,11 +1,70 @@
 /**
  * Book Recommendation Quiz API
  * Accepts POST { answers: { mood, genre, pace, protagonist, setting, length, goal, audience } }
- * Calls the Grok (xAI) API to generate 8-10 personalised book recommendations
+ * Uses Google Books API to search for books matching user preferences
  * Returns { books: [ { id, title, authors, description, thumbnail, previewLink } ] }
  */
 
 const ALLOWED_QUESTION_IDS = ['mood', 'genre', 'pace', 'protagonist', 'setting', 'length', 'goal', 'audience']
+
+// Maps for converting quiz answers to search keywords
+const genreMap = {
+  'fantasy': 'fantasy fiction',
+  'sci-fi': 'science fiction',
+  'mystery': 'mystery fiction',
+  'thriller': 'thriller',
+  'romance': 'romance novel',
+  'horror': 'horror fiction',
+  'non-fiction': 'nonfiction',
+  'biography': 'biography',
+  'self-help': 'self help',
+  'history': 'historical',
+  'business': 'business',
+  'poetry': 'poetry',
+}
+
+const moodMap = {
+  'feel-good': 'feel good',
+  'dark': 'dark fiction',
+  'uplifting': 'inspirational',
+  'tense': 'suspense',
+  'wholesome': 'wholesome',
+  'adventurous': 'adventure',
+  'thought-provoking': 'intellectual',
+  'funny': 'humor',
+  'emotional': 'emotional',
+  'action-packed': 'action',
+}
+
+const paceMap = {
+  'fast': 'fast paced',
+  'medium': 'moderate pace',
+  'slow': 'slow burn',
+}
+
+const lengthMap = {
+  'short': 'short book',
+  'medium': 'novel',
+  'long': 'long novel',
+  'epic': 'epic',
+}
+
+const protagonistMap = {
+  'strong-female': 'strong female protagonist',
+  'strong-male': 'male protagonist',
+  'group': 'ensemble cast',
+  'unlikely-hero': 'unlikely hero',
+  'anti-hero': 'antihero',
+  'everyday': 'ordinary protagonist',
+}
+
+const audienceMap = {
+  'general': '',
+  'young-adult': 'young adult',
+  'adult': 'adult fiction',
+  'mature': 'mature',
+  'teen': 'teen',
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -29,131 +88,141 @@ export default async function handler(req, res) {
   }
 
   try {
-    const apiKey = process.env.GROK_API_KEY
+    const apiKey = process.env.GOOGLE_BOOKS_API_KEY
 
     if (!apiKey) {
-      throw new Error('GROK_API_KEY is not configured')
+      throw new Error('GOOGLE_BOOKS_API_KEY is not configured')
     }
 
-    // Build user preferences from answers
-    const preferences = Object.entries(answers)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(', ')
+    // Build search query from answers using space-separated keywords
+    const searchTerms = []
 
-    // Construct prompt for Grok
-    const systemPrompt = `You are a knowledgeable book recommendation expert. Your task is to recommend books based on the user's preferences from a book quiz.
+    // Add genre keywords
+    const genre = answers.genre?.toLowerCase().trim()
+    if (genre && genreMap[genre]) {
+      searchTerms.push(genreMap[genre])
+    }
 
-IMPORTANT: You must respond ONLY with a valid JSON array of book objects. No additional text, no markdown formatting, no explanations. The response must be parseable by JSON.parse().
+    // Add mood keywords
+    const mood = answers.mood?.toLowerCase().trim()
+    if (mood && moodMap[mood]) {
+      searchTerms.push(moodMap[mood])
+    }
 
-Each book object must have exactly these fields:
-- id: a unique string identifier (use a slug format like "title-author-lastname", e.g., "the-hobbit-tolkien")
-- title: the book title (string)
-- authors: an array of author names (array of strings)
-- description: a brief description of the book (string, max 300 characters)
-- thumbnail: null (you cannot provide images)
-- previewLink: null (you cannot provide links)
+    // Add pace keywords
+    const pace = answers.pace?.toLowerCase().trim()
+    if (pace && paceMap[pace]) {
+      searchTerms.push(paceMap[pace])
+    }
 
-Recommend 8-10 books that match the user's preferences. Be specific and diverse in your recommendations.`
+    // Add length keywords
+    const length = answers.length?.toLowerCase().trim()
+    if (length && lengthMap[length]) {
+      searchTerms.push(lengthMap[length])
+    }
 
-    const userPrompt = `Based on my book quiz preferences, recommend 8-10 books I would enjoy.
+    // Add protagonist type keywords
+    const protagonist = answers.protagonist?.toLowerCase().trim()
+    if (protagonist && protagonistMap[protagonist]) {
+      searchTerms.push(protagonistMap[protagonist])
+    }
 
-My preferences: ${preferences}
+    // Add audience keywords
+    const audience = answers.audience?.toLowerCase().trim()
+    if (audience && audienceMap[audience]) {
+      searchTerms.push(audienceMap[audience])
+    }
 
-Please provide book recommendations that match these preferences. Consider the genre, mood, pacing, protagonist type, setting, and target audience.`
+    // Fallback: use mood and genre directly if no mapping found
+    if (searchTerms.length < 2) {
+      if (genre && !searchTerms.includes(genre)) {
+        searchTerms.push(genre)
+      }
+      if (mood && !searchTerms.includes(mood)) {
+        searchTerms.push(mood)
+      }
+    }
 
-    // Debug: Log the prompt being sent to Grok
-    console.log('[book-quiz] Sending prompt to Grok:', userPrompt)
+    // Construct the search query
+    const query = searchTerms.join(' ')
+    
+    if (!query) {
+      return res.status(400).json({ error: 'Could not build search query from answers' })
+    }
 
-    // Call Grok AI API
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        model: 'grok-3-mini',
-        stream: false,
-        temperature: 0.7,
-      }),
-    })
+    console.log('[book-quiz] Google Books query:', query)
+
+    // Call Google Books API
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books&langRestrict=en&key=${apiKey}`
+    
+    const response = await fetch(url)
+
+    // Handle specific API errors
+    if (response.status === 401 || response.status === 403) {
+      console.error('[book-quiz] Google Books API authentication error:', response.status)
+      return res.status(500).json({ error: 'Book search service authentication failed. Please contact the site administrator.' })
+    }
+
+    if (response.status === 429) {
+      console.error('[book-quiz] Google Books API rate limit error:', response.status)
+      return res.status(500).json({ error: 'Book search service rate limit exceeded. Please try again later.' })
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      console.error('[book-quiz] Grok API error:', errorData)
-      throw new Error(`Grok API error: ${response.status}`)
+      console.error('[book-quiz] Google Books API error:', errorData)
+      throw new Error(`Google Books API error: ${response.status}`)
     }
 
     const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
 
-    if (!content) {
-      throw new Error('No content generated from Grok')
-    }
-
-    // Debug: Log raw Grok response
-    console.log('[book-quiz] Raw Grok response:', content)
-
-    // Parse JSON from Grok's response
-    let books
-    try {
-      // Try to extract JSON from the response (in case there's any wrapper text)
-      const jsonMatch = content.match(/\[[\s\S]*\]/)
-      if (!jsonMatch) {
-        throw new Error('No JSON array found in response')
-      }
-      books = JSON.parse(jsonMatch[0])
-    } catch (parseError) {
-      console.error('[book-quiz] JSON parse error:', parseError)
-      console.error('[book-quiz] Failed content:', content)
-      throw new Error('Failed to parse book recommendations from AI response')
-    }
-
-    if (!Array.isArray(books) || books.length === 0) {
+    if (!data.items || data.items.length === 0) {
       return res.status(200).json({ books: [], message: 'No books found for your preferences. Try different answers!' })
     }
 
-    // Normalise each book to match frontend expectations
-    const normalised = books.slice(0, 10).map((book) => {
-      const title = typeof book.title === 'string' && book.title.trim() ? book.title.trim() : 'Unknown Title'
-      const authors = Array.isArray(book.authors) && book.authors.length > 0 
-        ? book.authors 
-        : ['Unknown Author']
+    // Deduplicate and normalize books
+    const seen = new Set()
+    const normalised = []
+
+    for (const item of data.items) {
+      const volumeInfo = item.volumeInfo || {}
       
-      // Generate unique id from title and author if not provided
-      const id = book.id || `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}-${authors[0].toLowerCase().replace(/[^a-z0-9]+/g, '').substring(0, 10)}`
+      // Skip if no title
+      if (!volumeInfo.title) continue
 
-      const rawDescription = typeof book.description === 'string' ? book.description.trim() : ''
-      const description = rawDescription
-        ? rawDescription.substring(0, 300)
-        : 'No description available.'
+      // Create unique identifier
+      const title = volumeInfo.title.trim()
+      const authors = volumeInfo.authors || ['Unknown Author']
+      const id = item.id || `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').substring(0, 50)}-${(authors[0] || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '').substring(0, 10)}`
 
-      return {
+      // Skip duplicates based on title+author
+      const key = `${title.toLowerCase()}-${(authors[0] || '').toLowerCase()}`
+      if (seen.has(key)) continue
+      seen.add(key)
+
+      // Get description (truncated)
+      const rawDescription = typeof volumeInfo.description === 'string' ? volumeInfo.description.trim() : ''
+      const description = rawDescription ? rawDescription.substring(0, 300) : 'No description available.'
+
+      // Get thumbnail
+      const thumbnail = volumeInfo.imageLinks?.thumbnail?.replace('http:', 'https:') || null
+
+      // Get preview link
+      const previewLink = volumeInfo.previewLink || null
+
+      normalised.push({
         id,
         title,
         authors,
         description,
-        thumbnail: null,
-        previewLink: null,
-      }
-    })
+        thumbnail,
+        previewLink,
+      })
 
-    // DEBUG: Log final results before returning
-    console.log('[book-quiz] Raw books count:', books.length)
-    console.log('[book-quiz] Final books count:', normalised.length)
-    if (normalised.length > 0) {
-      console.log('[book-quiz] Sample book:', JSON.stringify(normalised[0], null, 2))
+      if (normalised.length >= 10) break
     }
+
+    console.log('[book-quiz] Found books:', normalised.length)
 
     return res.status(200).json({ books: normalised })
   } catch (error) {
