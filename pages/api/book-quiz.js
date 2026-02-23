@@ -111,7 +111,20 @@ export default async function handler(req, res) {
     const results = await Promise.allSettled(
       queries.map((q) =>
         fetch(buildUrl(q)).then((r) => {
-          if (!r.ok) throw new Error(`Google Books API error: ${r.status}`)
+          if (!r.ok) {
+            const status = r.status
+            let errorMessage = `Google Books API error: ${status}`
+            
+            if (status === 401 || status === 403) {
+              errorMessage = 'Google Books API auth failed. Make sure GOOGLE_BOOKS_API_KEY is set and valid, and the Google Books API is enabled in Google Cloud Console.'
+            } else if (status === 429) {
+              errorMessage = 'Google Books API quota exceeded. Try again later or use an API key for higher limits.'
+            } else if (status >= 500) {
+              errorMessage = 'Google Books API server error. Try again later.'
+            }
+            
+            throw new Error(errorMessage)
+          }
           return r.json()
         })
       )
