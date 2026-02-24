@@ -112,7 +112,7 @@ function AIPromptGenerator() {
   const shareOnTwitter = () => {
     const text = encodeURIComponent(`Check out this AI prompt I generated: ${generatedPrompt.substring(0, 200)}...`)
     const url = encodeURIComponent(window.location.href)
-    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank')
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank', 'width=550,height=420')
   }
 
   const shareOnLinkedIn = () => {
@@ -597,23 +597,92 @@ function BookRecommendationQuiz() {
 
   const shareCaption = `I just discovered my next ${books.length} reads with Bookshelfie's Book Quiz! 📚✨ Try it free at https://bookshelfieapp.com #BookRecommendations #Bookshelfie`
 
-  const openInstagram = () => {
-    // Open Instagram app with new post screen
-    const instagramUrl = 'https://www.instagram.com/'
-    window.open(instagramUrl, '_blank')
+  // Check if native share is available (mobile devices)
+  const canNativeShare = () => {
+    return navigator.share && navigator.canShare && typeof navigator.share === 'function'
+  }
+
+  const handleNativeShare = async () => {
+    if (canNativeShare()) {
+      try {
+        await navigator.share({
+          title: 'Book Shelfie - Book Quiz Results',
+          text: shareCaption,
+          url: 'https://bookshelfieapp.com'
+        })
+        return true
+      } catch (err) {
+        // User cancelled or error - fall back to other methods
+        if (err.name !== 'AbortError') {
+          console.log('Native share failed:', err)
+        }
+      }
+    }
+    return false
+  }
+
+  const copyCaptionToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareCaption)
+      return true
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      return false
+    }
+  }
+
+  const openInstagram = async () => {
+    // Try native share first (works on mobile)
+    const nativeSuccess = await handleNativeShare()
+    if (nativeSuccess) return
+
+    // Try to open Instagram app via URL scheme (mobile)
+    const instagramAppUrl = 'instagram://library?AssetPath=&Caption='
+    const instagramWebUrl = 'https://www.instagram.com/'
+    
+    // Try opening Instagram app first, fall back to web
+    const instagramWindow = window.open(instagramAppUrl, '_blank')
+    
+    // If Instagram app didn't open (or opened but user may want web), also copy caption
+    // Show user that they can paste the caption
+    const copied = await copyCaptionToClipboard()
+    if (copied) {
+      // Open Instagram web as fallback, but show a toast about copying
+      window.open(instagramWebUrl, '_blank')
+      alert('Caption copied! Open Instagram and paste it to create your post.')
+    }
   }
 
   const shareOnTwitter = () => {
+    // Use Twitter Web Intent with both text and URL
+    const text = encodeURIComponent(shareCaption)
+    const url = encodeURIComponent('https://bookshelfieapp.com')
     window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareCaption)}`,
-      '_blank'
+      `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+      '_blank',
+      'width=550,height=420'
     )
   }
 
-  const openSnapchat = () => {
-    // Open Snapchat with share content
-    const snapchatUrl = `https://www.snapchat.com/scan?url=${encodeURIComponent('https://bookshelfieapp.com')}&caption=${encodeURIComponent(shareCaption)}`
+  const openSnapchat = async () => {
+    // Try native share first (works on mobile)
+    const nativeSuccess = await handleNativeShare()
+    if (nativeSuccess) return
+
+    // For Snapchat, use the share URL with content
+    // Note: Snapchat doesn't have a direct web post creation API
+    // The best approach is to use their deep link or copy to clipboard
+    const snapchatUrl = 'https://www.snapchat.com/'
+    
+    // Copy caption to clipboard so user can paste in Snapchat
+    const copied = await copyCaptionToClipboard()
+    
+    // Open Snapchat web
     window.open(snapchatUrl, '_blank')
+    
+    if (copied) {
+      alert('Caption copied! Open Snapchat and paste it to share with your friends.')
+    }
   }
 
   // ── Loading phase ──────────────────────────────────────────────────────────
@@ -932,7 +1001,10 @@ function BookRecommendationQuiz() {
               onClick={openInstagram}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 transition-opacity shadow-sm"
             >
-              📸 Instagram
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+              Create Post
             </button>
 
             {/* Snapchat */}
@@ -940,7 +1012,10 @@ function BookRecommendationQuiz() {
               onClick={openSnapchat}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-yellow-400 text-gray-900 hover:bg-yellow-300 transition-colors shadow-sm"
             >
-              👻 Snapchat
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12.206.793c.99 0 6.955 4.498 7.153 9.821.006.145.006.291.006.437-.295.18-.677.291-1.077.291-.181 0-.362-.027-.538-.081-1.116-.356-2.013-.356-3.167-.356-1.154 0-2.051 0-3.167.356-.534.166-1.107.101-1.558-.181-.451-.281-.733-.736-.733-1.236 0-.246.091-.481.252-.663.51-.576 1.688-1.887 1.792-2.014.18-.218.467-.337.767-.337.181 0 .357.036.52.101.162.065.314.166.439.296.125.131.227.283.3.449.073.165.117.342.132.52 0 .018.006.036.006.054-.006.018-.006.036-.012.053-.013.195-.08.379-.185.538-.106.159-.249.291-.416.387-.166.097-.349.159-.537.183-.188.025-.377.013-.562-.031-.184-.045-.357-.12-.512-.224-.156-.104-.29-.236-.395-.39-.105-.155-.177-.328-.213-.51-.037-.182-.037-.369 0-.554.037-.184.105-.357.201-.515.097-.159.225-.297.377-.407.152-.11.328-.19.512-.239.184-.048.375-.062.562-.042.188.02.371.072.537.155.167.084.319.193.447.325.129.131.233.285.307.457.074.172.116.357.124.545.007.188-.015.379-.066.562-.05.184-.124.354-.218.505-.095.152-.213.283-.35.39-.136.107-.289.185-.449.229-.16.044-.328.061-.495.049-.168-.012-.333-.049-.487-.109-.154-.061-.293-.145-.411-.249-.118-.104-.215-.228-.285-.366-.071-.139-.117-.293-.135-.452-.018-.16-.006-.324.035-.482.041-.158.11-.304.203-.433.093-.129.209-.239.341-.324.132-.085.281-.146.435-.18.154-.034.314-.041.472-.02.16.021.315.065.46.131.145.066.276.153.389.259.113.105.207.232.279.376.072.143.123.299.152.461.028.162.033.328.013.492-.02.164-.06.32-.12.466-.06.145-.141.277-.238.39-.098.113-.213.207-.34.277-.126.07-.264.117-.406.138-.142.021-.289.022-.432.002-.143-.02-.283-.059-.413-.115-.13-.056-.251-.129-.358-.217-.107-.088-.2-.193-.276-.312-.075-.12-.131-.253-.165-.395-.033-.142-.046-.29-.037-.437.008-.148.034-.293.077-.43.042-.138.1-.266.17-.38.07-.115.157-.217.257-.303.1-.086.215-.158.337-.213.121-.055.253-.09.387-.105.135-.015.272-.012.406.009.135.021.265.057.387.108.121.051.234.116.333.193.099.077.188.168.265.27.076.102.14.213.19.33.05.117.086.24.108.365.022.125.029.253.022.38-.007.127-.03-.127-.03.253-.037.12-.089.236-.155.342-.065.107-.145.201-.236.281-.092.08-.196.145-.307.194-.111.049-.227.082-.345.097-.118.015-.237.018-.354.007z"/>
+              </svg>
+              Share
             </button>
 
             {/* Twitter/X */}
@@ -948,7 +1023,10 @@ function BookRecommendationQuiz() {
               onClick={shareOnTwitter}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-gray-900 text-white hover:bg-gray-700 transition-colors shadow-sm"
             >
-              🐦 Twitter / X
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+              Post
             </button>
           </div>
         </div>
