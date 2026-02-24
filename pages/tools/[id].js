@@ -493,6 +493,9 @@ function BookRecommendationQuiz() {
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
   const [animating, setAnimating] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState('popularity') // 'popularity' | 'rating' | 'title-asc' | 'title-desc' | 'author-asc' | 'author-desc' | 'year-desc' | 'year-asc'
+  const [viewMode, setViewMode] = useState('card') // 'card' | 'list'
   const submitting = useRef(false)
 
   const totalQuestions = QUIZ_QUESTIONS.length
@@ -547,9 +550,52 @@ function BookRecommendationQuiz() {
     setBooks([])
     setError(null)
     setCopied(false)
+    setSearchQuery('')
+    setSortBy('popularity')
+    setViewMode('card')
   }
 
-  const shareCaption = `I just discovered my next 8 reads with Bookshelfie's Book Quiz! 📚✨ Try it free at https://bookshelfie.app #BookRecommendations #Bookshelfie`
+  // Sort and filter books
+  const getFilteredAndSortedBooks = () => {
+    let filtered = books
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      filtered = books.filter(book => 
+        book.title.toLowerCase().includes(query) || 
+        book.authors.join(' ').toLowerCase().includes(query)
+      )
+    }
+    
+    // Sort books
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'popularity':
+          return (b.popularity || 0) - (a.popularity || 0)
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0)
+        case 'title-asc':
+          return a.title.localeCompare(b.title)
+        case 'title-desc':
+          return b.title.localeCompare(a.title)
+        case 'author-asc':
+          return a.authors.join('').localeCompare(b.authors.join(''))
+        case 'author-desc':
+          return b.authors.join('').localeCompare(a.authors.join(''))
+        case 'year-desc':
+          return (b.year || 0) - (a.year || 0)
+        case 'year-asc':
+          return (a.year || 0) - (b.year || 0)
+        default:
+          return (b.popularity || 0) - (a.popularity || 0)
+      }
+    })
+    
+    return sorted
+  }
+
+  const shareCaption = `I just discovered my next ${books.length} reads with Bookshelfie's Book Quiz! 📚✨ Try it free at https://bookshelfie.app #BookRecommendations #Bookshelfie`
 
   const copyCaption = async () => {
     try {
@@ -594,6 +640,8 @@ function BookRecommendationQuiz() {
 
   // ── Results phase ──────────────────────────────────────────────────────────
   if (phase === 'results') {
+    const filteredBooks = getFilteredAndSortedBooks()
+    
     return (
       <div>
         {/* Header */}
@@ -611,57 +659,266 @@ function BookRecommendationQuiz() {
           </div>
         )}
 
-        {/* Book grid */}
+        {/* Search and Sort Bar */}
         {books.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-12">
-            {books.map((book) => (
-              <div
-                key={book.id}
-                className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:-translate-y-1 transition-transform duration-200"
-              >
-                {/* Cover */}
-                <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 h-44 flex items-center justify-center overflow-hidden">
-                  {book.thumbnail ? (
-                    <Image
-                      src={book.thumbnail}
-                      alt={book.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  ) : (
-                    <span className="text-5xl">📖</span>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-3 flex flex-col flex-1">
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">
-                    {book.title}
-                  </h3>
-                  <p className="text-xs text-indigo-600 font-medium mb-2 line-clamp-1">
-                    {book.authors.join(', ')}
-                  </p>
-                  <p className="text-xs text-gray-500 leading-relaxed flex-1 line-clamp-3">
-                    {(book.description ?? '').substring(0, 100)}
-                    {(book.description?.length ?? 0) > 100 ? '…' : ''}
-                  </p>
-                  {book.previewLink && (
-                    <a
-                      href={book.previewLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors inline-flex items-center gap-1"
-                    >
-                      Preview on Google Books
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                      </svg>
-                    </a>
-                  )}
-                </div>
+          <div className="mb-6 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </div>
-            ))}
+              <input
+                type="text"
+                placeholder="Search by title or author..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+            
+            {/* Sort Dropdown */}
+            <div className="relative sm:w-56">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                </svg>
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm appearance-none"
+              >
+                <option value="popularity">Most Popular</option>
+                <option value="rating">Highest Rated</option>
+                <option value="title-asc">Title (A-Z)</option>
+                <option value="title-desc">Title (Z-A)</option>
+                <option value="author-asc">Author (A-Z)</option>
+                <option value="author-desc">Author (Z-A)</option>
+                <option value="year-desc">Newest First</option>
+                <option value="year-asc">Oldest First</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex rounded-xl overflow-hidden border border-gray-300">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`p-2.5 transition-colors ${
+                  viewMode === 'card'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="Card View"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2.5 transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+                title="List View"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Results count */}
+        {books.length > 0 && searchQuery && (
+          <p className="text-sm text-gray-500 mb-4">
+            Showing {filteredBooks.length} of {books.length} books
+          </p>
+        )}
+
+        {/* Book grid or list view */}
+        {filteredBooks.length > 0 ? (
+          viewMode === 'card' ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-12">
+              {filteredBooks.map((book) => (
+                <div
+                  key={book.id}
+                  className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col hover:-translate-y-1 transition-transform duration-200"
+                >
+                  {/* Cover */}
+                  <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 h-44 flex items-center justify-center overflow-hidden">
+                    {book.thumbnail ? (
+                      <Image
+                        src={book.thumbnail}
+                        alt={book.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-5xl">📖</span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-3 flex flex-col flex-1">
+                    <h3 className="font-bold text-gray-900 text-sm leading-tight mb-1 line-clamp-2">
+                      {book.title}
+                    </h3>
+                    <p className="text-xs text-indigo-600 font-medium mb-1 line-clamp-1">
+                      {book.authors.join(', ')}
+                    </p>
+                    {/* Rating and Year */}
+                    <div className="flex items-center gap-2 mb-2">
+                      {book.rating && (
+                        <div className="flex items-center gap-0.5">
+                          <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                          <span className="text-xs text-gray-600 font-medium">{book.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                      {book.year && (
+                        <span className="text-xs text-gray-400">({book.year})</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed flex-1 line-clamp-3">
+                      {(book.description ?? '').substring(0, 100)}
+                      {(book.description?.length ?? 0) > 100 ? '…' : ''}
+                    </p>
+                    {book.previewLink && (
+                      <a
+                        href={book.previewLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors inline-flex items-center gap-1"
+                      >
+                        Preview on Google Books
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // List View
+            <div className="space-y-4 mb-12">
+              {filteredBooks.map((book) => (
+                <div
+                  key={book.id}
+                  className="bg-white rounded-xl shadow-md overflow-hidden flex flex-col sm:flex-row hover:-translate-y-0.5 transition-transform duration-200"
+                >
+                  {/* Cover - smaller for list view */}
+                  <div className="relative bg-gradient-to-br from-indigo-100 to-purple-100 h-40 sm:h-auto sm:w-28 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                    {book.thumbnail ? (
+                      <Image
+                        src={book.thumbnail}
+                        alt={book.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    ) : (
+                      <span className="text-4xl">📖</span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900 text-base leading-tight mb-1">
+                          {book.title}
+                        </h3>
+                        <p className="text-sm text-indigo-600 font-medium mb-2">
+                          {book.authors.join(', ')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {book.rating && (
+                          <div className="flex items-center gap-1">
+                            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <span className="text-sm text-gray-600 font-medium">{book.rating.toFixed(1)}</span>
+                          </div>
+                        )}
+                        {book.year && (
+                          <span className="text-sm text-gray-400">({book.year})</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Genre/Tags */}
+                    {(book.categories || []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {book.categories.slice(0, 3).map((category, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs rounded-full font-medium"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Description */}
+                    <p className="text-sm text-gray-500 leading-relaxed mt-2 line-clamp-2">
+                      {book.description || 'No description available.'}
+                    </p>
+
+                    {/* Preview Link */}
+                    {book.previewLink && (
+                      <a
+                        href={book.previewLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors inline-flex items-center gap-1 w-fit"
+                      >
+                        Preview on Google Books
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-4xl mb-4">🔍</div>
+            <p className="text-gray-500 text-lg">No books found matching "{searchQuery}"</p>
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="mt-4 text-indigo-600 hover:text-indigo-800 font-medium"
+            >
+              Clear search
+            </button>
           </div>
         )}
 

@@ -321,18 +321,22 @@ export default async function handler(req, res) {
     console.log('[book-quiz] Generating recommendations for:', preferencesText)
 
     // Call Grok API to get book recommendations
-    const systemPrompt = `You are a knowledgeable book recommendation expert. Based on the user's preferences, recommend 8-10 books that match their tastes. 
+    const systemPrompt = `You are a knowledgeable book recommendation expert. Based on the user's preferences, recommend 28-30 books that match their tastes. 
 
 IMPORTANT: Your response MUST be a valid JSON array of objects. Each object must have exactly these fields:
 - "title": The book title
 - "author": The author's name  
 - "description": A brief 1-2 sentence description of the book (max 200 characters)
+- "rating": The book's average rating on a 1-5 scale (e.g., 4.5)
+- "ratingsCount": Approximate number of ratings/reviews the book has received (e.g., 15000)
+- "year": The year the book was published
+- "popularity": A score from 1-100 representing popularity based on sales, awards, and cultural impact
 
 Return ONLY the JSON array, no additional text, no markdown code blocks.`
 
-    const userPrompt = `Recommend 8-10 books based on these preferences: ${preferencesText}. 
+    const userPrompt = `Recommend 28-30 books based on these preferences: ${preferencesText}. 
 
-Return a JSON array with each book containing title, author, and a brief description.`
+Return a JSON array with each book containing title, author, description, rating (1-5), ratingsCount, year, and popularity (1-100).`
 
     const grokResponse = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
@@ -434,10 +438,14 @@ Return a JSON array with each book containing title, author, and a brief descrip
         description: description.substring(0, 300),
         thumbnail,
         previewLink,
+        rating: typeof book.rating === 'number' ? book.rating : null,
+        ratingsCount: typeof book.ratingsCount === 'number' ? book.ratingsCount : null,
+        year: typeof book.year === 'number' ? book.year : null,
+        popularity: typeof book.popularity === 'number' ? book.popularity : null,
       })
 
-      // Limit to 10 books
-      if (finalBooks.length >= 10) break
+      // Limit to 30 books
+      if (finalBooks.length >= 30) break
     }
 
     console.log('[book-quiz] Final book count:', finalBooks.length)
