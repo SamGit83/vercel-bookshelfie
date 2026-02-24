@@ -595,16 +595,12 @@ function BookRecommendationQuiz() {
     return sorted
   }
 
-  const shareCaption = `I just discovered my next ${books.length} reads with Bookshelfie's Book Quiz! 📚✨ Try it free at https://bookshelfie.app #BookRecommendations #Bookshelfie`
+  const shareCaption = `I just discovered my next ${books.length} reads with Bookshelfie's Book Quiz! 📚✨ Try it free at https://bookshelfieapp.com #BookRecommendations #Bookshelfie`
 
-  const copyCaption = async () => {
-    try {
-      await navigator.clipboard.writeText(shareCaption)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2500)
-    } catch {
-      // fallback: do nothing
-    }
+  const openInstagram = () => {
+    // Open Instagram app with new post screen
+    const instagramUrl = 'https://www.instagram.com/'
+    window.open(instagramUrl, '_blank')
   }
 
   const shareOnTwitter = () => {
@@ -615,7 +611,9 @@ function BookRecommendationQuiz() {
   }
 
   const openSnapchat = () => {
-    window.open('https://www.snapchat.com/scan', '_blank')
+    // Open Snapchat with share content
+    const snapchatUrl = `https://www.snapchat.com/scan?url=${encodeURIComponent('https://bookshelfieapp.com')}&caption=${encodeURIComponent(shareCaption)}`
+    window.open(snapchatUrl, '_blank')
   }
 
   // ── Loading phase ──────────────────────────────────────────────────────────
@@ -929,12 +927,12 @@ function BookRecommendationQuiz() {
             Let your friends know what you're reading next
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            {/* Instagram — copy caption */}
+            {/* Instagram */}
             <button
-              onClick={copyCaption}
+              onClick={openInstagram}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-pink-500 to-orange-400 text-white hover:opacity-90 transition-opacity shadow-sm"
             >
-              📸 {copied ? 'Caption Copied!' : 'Instagram'}
+              📸 Instagram
             </button>
 
             {/* Snapchat */}
