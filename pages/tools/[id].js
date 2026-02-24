@@ -408,79 +408,79 @@ const QUIZ_QUESTIONS = [
     id: 'mood',
     question: "What's your vibe right now?",
     options: [
-      { emoji: '😊', label: 'Feel-good & uplifting' },
-      { emoji: '🌑', label: 'Dark & intense' },
-      { emoji: '😂', label: 'Funny & light' },
-      { emoji: '🤔', label: 'Thought-provoking' },
+      { emoji: '😊', label: 'Feel-good & uplifting', value: 'feel-good' },
+      { emoji: '🌑', label: 'Dark & intense', value: 'dark' },
+      { emoji: '😂', label: 'Funny & light', value: 'funny' },
+      { emoji: '🤔', label: 'Thought-provoking', value: 'thought-provoking' },
     ],
   },
   {
     id: 'genre',
     question: 'Pick your genre',
     options: [
-      { emoji: '🧙', label: 'Fantasy & Sci-Fi' },
-      { emoji: '🔍', label: 'Mystery & Thriller' },
-      { emoji: '💕', label: 'Romance' },
-      { emoji: '📖', label: 'Literary Fiction' },
-      { emoji: '🌍', label: 'Non-fiction' },
+      { emoji: '🧙', label: 'Fantasy & Sci-Fi', value: 'fantasy' },
+      { emoji: '🔍', label: 'Mystery & Thriller', value: 'mystery' },
+      { emoji: '💕', label: 'Romance', value: 'romance' },
+      { emoji: '📖', label: 'Literary Fiction', value: 'literary-fiction' },
+      { emoji: '🌍', label: 'Non-fiction', value: 'non-fiction' },
     ],
   },
   {
     id: 'pace',
     question: 'How fast do you like your reads?',
     options: [
-      { emoji: '⚡', label: 'Fast-paced page-turner' },
-      { emoji: '🌊', label: 'Slow & immersive' },
-      { emoji: '⚖️', label: 'Balanced mix' },
+      { emoji: '⚡', label: 'Fast-paced page-turner', value: 'fast' },
+      { emoji: '🌊', label: 'Slow & immersive', value: 'slow' },
+      { emoji: '⚖️', label: 'Balanced mix', value: 'medium' },
     ],
   },
   {
     id: 'protagonist',
     question: "Who's the story about?",
     options: [
-      { emoji: '👤', label: 'A lone hero on a quest' },
-      { emoji: '👥', label: 'A group of friends/found family' },
-      { emoji: '💑', label: 'Two people falling in love' },
-      { emoji: '🌐', label: 'Society / big ideas' },
+      { emoji: '👤', label: 'A lone hero on a quest', value: 'unlikely-hero' },
+      { emoji: '👥', label: 'A group of friends/found family', value: 'group' },
+      { emoji: '💑', label: 'Two people falling in love', value: 'romance-duo' },
+      { emoji: '🌐', label: 'Society / big ideas', value: 'society' },
     ],
   },
   {
     id: 'setting',
     question: 'What setting excites you?',
     options: [
-      { emoji: '🏰', label: 'Magical / fantasy world' },
-      { emoji: '🌆', label: 'Modern city life' },
-      { emoji: '🕰️', label: 'Historical past' },
-      { emoji: '🚀', label: 'Future / space' },
+      { emoji: '🏰', label: 'Magical / fantasy world', value: 'fantasy-world' },
+      { emoji: '🌆', label: 'Modern city life', value: 'contemporary' },
+      { emoji: '🕰️', label: 'Historical past', value: 'historical' },
+      { emoji: '🚀', label: 'Future / space', value: 'sci-fi' },
     ],
   },
   {
     id: 'length',
     question: 'How long is your attention span right now?',
     options: [
-      { emoji: '📗', label: 'Short (under 300 pages)' },
-      { emoji: '📘', label: 'Medium (300–500 pages)' },
-      { emoji: '📕', label: 'Long (500+ pages, bring it on)' },
+      { emoji: '📗', label: 'Short (under 300 pages)', value: 'short' },
+      { emoji: '📘', label: 'Medium (300–500 pages)', value: 'medium' },
+      { emoji: '📕', label: 'Long (500+ pages, bring it on)', value: 'long' },
     ],
   },
   {
     id: 'goal',
     question: 'What do you want from this book?',
     options: [
-      { emoji: '🎢', label: 'Escapism & adventure' },
-      { emoji: '💡', label: 'Learn something new' },
-      { emoji: '😢', label: 'Feel all the emotions' },
-      { emoji: '😌', label: 'Comfort & coziness' },
+      { emoji: '🎢', label: 'Escapism & adventure', value: 'escapism' },
+      { emoji: '💡', label: 'Learn something new', value: 'educational' },
+      { emoji: '😢', label: 'Feel all the emotions', value: 'emotional' },
+      { emoji: '😌', label: 'Comfort & coziness', value: 'comfort' },
     ],
   },
   {
     id: 'audience',
     question: 'Who are you reading for?',
     options: [
-      { emoji: '🧒', label: "I'm a teen / young adult" },
-      { emoji: '🧑', label: "I'm an adult (20s–30s)" },
-      { emoji: '🧓', label: "I'm older (40s+)" },
-      { emoji: '👨‍👩‍👧', label: 'Reading with my kids' },
+      { emoji: '🧒', label: "I'm a teen / young adult", value: 'young-adult' },
+      { emoji: '🧑', label: "I'm an adult (20s–30s)", value: 'adult' },
+      { emoji: '🧓', label: "I'm older (40s+)", value: 'mature' },
+      { emoji: '👨‍👩‍👧', label: 'Reading with my kids', value: 'children' },
     ],
   },
 ]
@@ -754,12 +754,11 @@ function BookRecommendationQuiz() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {q.options.map((opt) => {
-              const fullLabel = `${opt.emoji} ${opt.label}`
-              const isSelected = answers[q.id] === fullLabel
-              return (
-                <button
-                  key={opt.label}
-                  onClick={() => handleAnswer(q.id, fullLabel)}
+                const isSelected = answers[q.id] === opt.value
+                return (
+                  <button
+                    key={opt.label}
+                    onClick={() => handleAnswer(q.id, opt.value)}
                   className={`flex items-center gap-4 p-4 rounded-xl border-2 text-left font-medium transition-all duration-150 hover:border-indigo-400 hover:bg-indigo-50 active:scale-95 ${
                     isSelected
                       ? 'border-indigo-500 bg-indigo-50 text-indigo-800'

@@ -24,17 +24,18 @@ const genreMap = {
   'history': 'history',
   'business': 'business',
   'poetry': 'poetry',
+  'literary-fiction': 'literary fiction',
 }
 
 const moodMap = {
   'feel-good': 'feel-good',
-  'dark': 'dark',
+  'dark': 'dark and intense',
   'uplifting': 'uplifting',
   'tense': 'tense',
   'wholesome': 'wholesome',
   'adventurous': 'adventurous',
   'thought-provoking': 'thought-provoking',
-  'funny': 'funny',
+  'funny': 'funny and light-hearted',
   'emotional': 'emotional',
   'action-packed': 'action-packed',
 }
@@ -42,31 +43,48 @@ const moodMap = {
 const paceMap = {
   'fast': 'fast-paced',
   'medium': 'moderate pace',
-  'slow': 'slow-burn',
+  'slow': 'slow-burn and immersive',
 }
 
 const lengthMap = {
-  'short': 'short (under 200 pages)',
-  'medium': 'medium length (200-400 pages)',
-  'long': 'long (400-600 pages)',
+  'short': 'short (under 300 pages)',
+  'medium': 'medium length (300-500 pages)',
+  'long': 'long (500+ pages)',
   'epic': 'epic (over 600 pages)',
 }
 
 const protagonistMap = {
   'strong-female': 'strong female protagonist',
   'strong-male': 'strong male protagonist',
-  'group': 'ensemble cast',
-  'unlikely-hero': 'unlikely hero',
+  'group': 'ensemble cast or found family',
+  'unlikely-hero': 'lone hero or unlikely hero on a quest',
   'anti-hero': 'anti-hero',
   'everyday': 'everyday ordinary protagonist',
+  'romance-duo': 'two protagonists in a romance',
+  'society': 'society or big ideas as the focus',
 }
 
 const audienceMap = {
   'general': 'general audience',
   'young-adult': 'young adult',
-  'adult': 'adult',
-  'mature': 'mature',
+  'adult': 'adult (20s-30s)',
+  'mature': 'mature adult (40s+)',
   'teen': 'teen',
+  'children': 'children or middle grade',
+}
+
+const settingMap = {
+  'fantasy-world': 'set in a magical or fantasy world',
+  'contemporary': 'set in a modern city or contemporary setting',
+  'historical': 'set in a historical period',
+  'sci-fi': 'set in the future or in space',
+}
+
+const goalMap = {
+  'escapism': 'escapism and adventure',
+  'educational': 'educational and informative',
+  'emotional': 'emotionally moving',
+  'comfort': 'comforting and cozy',
 }
 
 /**
@@ -255,6 +273,8 @@ export default async function handler(req, res) {
 
     // Build user preferences description for Grok
     const preferences = []
+
+    console.log('[book-quiz] Raw answers received:', JSON.stringify(answers))
     
     const genre = answers.genre?.toLowerCase().trim()
     if (genre && genreMap[genre]) {
@@ -279,6 +299,16 @@ export default async function handler(req, res) {
     const protagonist = answers.protagonist?.toLowerCase().trim()
     if (protagonist && protagonistMap[protagonist]) {
       preferences.push(`Protagonist: ${protagonistMap[protagonist]}`)
+    }
+
+    const setting = answers.setting?.toLowerCase().trim()
+    if (setting && settingMap[setting]) {
+      preferences.push(`Setting: ${settingMap[setting]}`)
+    }
+
+    const goal = answers.goal?.toLowerCase().trim()
+    if (goal && goalMap[goal]) {
+      preferences.push(`Reading goal: ${goalMap[goal]}`)
     }
     
     const audience = answers.audience?.toLowerCase().trim()
