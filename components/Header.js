@@ -74,6 +74,16 @@ export default function Header() {
             >
               Contact
             </Link>
+            <Link
+              href="/privacy"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/privacy') 
+                  ? 'bg-brand-50 text-brand-700' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              Privacy
+            </Link>
           </nav>
         </div>
       </div>
