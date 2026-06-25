@@ -84,21 +84,21 @@ const QUOTES = [
 const CUSTOM_TEXT = 'the quick brown fox jumps over the lazy dog while the curious cat watches from a sunny window above the quiet garden'
 
 const BADGES = [
-  { label: 'turtle', min: 0, max: 20, color: '#646669' },
-  { label: 'steady', min: 21, max: 40, color: '#5fb3b3' },
-  { label: 'swift', min: 41, max: 70, color: '#e2b714' },
-  { label: 'pro', min: 71, max: 100, color: '#e08c4e' },
-  { label: 'legend', min: 101, max: 999, color: '#ca4754' },
+  { label: 'turtle', min: 0, max: 20, color: '#9ca3af' },
+  { label: 'steady', min: 21, max: 40, color: '#0ea5e9' },
+  { label: 'swift', min: 41, max: 70, color: '#d4623e' },
+  { label: 'pro', min: 71, max: 100, color: '#b24d31' },
+  { label: 'legend', min: 101, max: 999, color: '#93402a' },
 ]
 
 const TT_THEMES = {
   dark: {
-    bg: '#323437', sub: '#646669', subAlt: '#2c2e31', text: '#d1d0c5',
-    main: '#e2b714', error: '#ca4754', errorExtra: '#7e2a33',
+    bg: '#1f2937', sub: '#9ca3af', subAlt: '#374151', text: '#f3f4f6',
+    main: '#f09878', error: '#ef4444', errorExtra: '#991b1b',
   },
   light: {
-    bg: '#eaeaea', sub: '#9099a3', subAlt: '#dcdcdc', text: '#444444',
-    main: '#bb9b00', error: '#d4002a', errorExtra: '#e8a0ad',
+    bg: '#f9fafb', sub: '#9ca3af', subAlt: '#fdeee8', text: '#374151',
+    main: '#d4623e', error: '#dc2626', errorExtra: '#fbd5c8',
   },
 }
 
@@ -457,7 +457,7 @@ function TypingTest() {
   const ModeTab = ({ id, label, icon }) => (
     <button
       onClick={() => setMode(id)}
-      className="flex items-center gap-1.5 px-2 py-1 text-sm font-mono transition-colors"
+      className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
       style={{ color: mode === id ? c.main : c.sub }}
     >
       {icon}
@@ -468,7 +468,7 @@ function TypingTest() {
   const Amount = ({ value, current, onClick }) => (
     <button
       onClick={onClick}
-      className="px-2 py-1 text-sm font-mono transition-colors"
+      className="px-2 py-1 text-sm transition-colors"
       style={{ color: current === value ? c.main : c.sub }}
     >
       {value}
@@ -478,7 +478,7 @@ function TypingTest() {
   const Toggle = ({ active, onClick, children }) => (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-2 py-1 text-sm font-mono transition-colors"
+      className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
       style={{ color: active ? c.main : c.sub }}
     >
       {children}
@@ -486,7 +486,7 @@ function TypingTest() {
   )
 
   return (
-    <div className="min-h-screen w-full font-mono transition-colors" style={{ background: c.bg }}>
+    <div className="min-h-screen w-full transition-colors" style={{ background: c.bg }}>
       <Head>
         <title>Typing Test — Book Shelfie</title>
         <meta name="description" content="A clean, minimal typing speed test. Measure your WPM, accuracy and consistency." />
