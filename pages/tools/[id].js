@@ -84,11 +84,11 @@ const QUOTES = [
 const CUSTOM_TEXT = 'the quick brown fox jumps over the lazy dog while the curious cat watches from a sunny window above the quiet garden'
 
 const BADGES = [
-  { label: 'turtle', min: 0, max: 20, color: '#9ca3af' },
-  { label: 'steady', min: 21, max: 40, color: '#0ea5e9' },
-  { label: 'swift', min: 41, max: 70, color: '#d4623e' },
-  { label: 'pro', min: 71, max: 100, color: '#b24d31' },
-  { label: 'legend', min: 101, max: 999, color: '#93402a' },
+  { label: 'Turtle', emoji: '🐢', min: 0, max: 20, color: '#9ca3af' },
+  { label: 'Steady', emoji: '🐇', min: 21, max: 40, color: '#0ea5e9' },
+  { label: 'Swift', emoji: '⚡', min: 41, max: 70, color: '#d4623e' },
+  { label: 'Pro', emoji: '🏆', min: 71, max: 100, color: '#b24d31' },
+  { label: 'Legend', emoji: '👑', min: 101, max: 999, color: '#93402a' },
 ]
 
 const TT_THEMES = {
@@ -635,9 +635,10 @@ function TypingTest() {
           /* Results */
           <div className="animate-fadeIn">
             {/* Badge - main item */}
-            <div className="flex justify-center mb-8">
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <div className="text-7xl">{result.badge.emoji}</div>
               <div
-                className="px-6 py-3 rounded-full text-lg font-bold inline-flex items-center gap-2"
+                className="px-5 py-1.5 rounded-full text-sm font-bold uppercase tracking-wide"
                 style={{ background: result.badge.color, color: '#fff' }}
               >
                 {result.badge.label}
