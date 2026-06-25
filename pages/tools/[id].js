@@ -634,29 +634,35 @@ function TypingTest() {
         ) : (
           /* Results */
           <div className="animate-fadeIn">
-            <div className="flex flex-col lg:flex-row items-center gap-8 mb-10">
-              <div className="flex flex-col items-center lg:items-start">
-                <div className="text-sm" style={{ color: c.sub }}>wpm</div>
-                <div className="text-6xl sm:text-7xl font-bold leading-none" style={{ color: c.main }}>{result.wpm}</div>
-                <div className="text-sm mt-4" style={{ color: c.sub }}>acc</div>
-                <div className="text-4xl sm:text-5xl font-bold leading-none" style={{ color: c.main }}>{result.acc}%</div>
-                <div
-                  className="mt-4 px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: result.badge.color, color: '#fff' }}
-                >
-                  {result.badge.label}
-                </div>
-              </div>
-              <div className="flex-1 w-full rounded-xl p-4" style={{ background: c.subAlt }}>
-                {renderGraph()}
-                <div className="flex justify-center gap-6 mt-2 text-xs" style={{ color: c.sub }}>
-                  <span><span style={{ color: c.main }}>—</span> wpm</span>
-                  <span><span style={{ color: c.sub }}>—</span> raw</span>
-                  <span><span style={{ color: c.error }}>×</span> errors</span>
-                </div>
+            {/* Badge - main item */}
+            <div className="flex justify-center mb-8">
+              <div
+                className="px-6 py-3 rounded-full text-lg font-bold inline-flex items-center gap-2"
+                style={{ background: result.badge.color, color: '#fff' }}
+              >
+                {result.badge.label}
               </div>
             </div>
 
+            {/* WPM and Accuracy */}
+            <div className="flex flex-col items-center gap-2 mb-8">
+              <div className="text-sm" style={{ color: c.sub }}>wpm</div>
+              <div className="text-7xl sm:text-8xl font-bold leading-none" style={{ color: c.main }}>{result.wpm}</div>
+              <div className="text-sm mt-2" style={{ color: c.sub }}>acc</div>
+              <div className="text-5xl sm:text-6xl font-bold leading-none" style={{ color: c.main }}>{result.acc}%</div>
+            </div>
+
+            {/* Graph */}
+            <div className="rounded-xl p-4 mb-8" style={{ background: c.subAlt }}>
+              {renderGraph()}
+              <div className="flex justify-center gap-6 mt-2 text-xs" style={{ color: c.sub }}>
+                <span><span style={{ color: c.main }}>—</span> wpm</span>
+                <span><span style={{ color: c.sub }}>—</span> raw</span>
+                <span><span style={{ color: c.error }}>×</span> errors</span>
+              </div>
+            </div>
+
+            {/* Detailed stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
               {[
                 { label: 'test type', value: mode === 'time' ? `time ${timeAmount}` : mode === 'words' ? `words ${wordAmount}` : mode },
