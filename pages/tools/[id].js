@@ -54,382 +54,635 @@ function ToolIcon({ name, className }) {
   )
 }
 
-function shuffleArray(arr, count) {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
+const WORD_POOL = [
+  'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this',
+  'but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their',
+  'what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just',
+  'him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now',
+  'look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way',
+  'even','new','want','because','any','these','give','day','most','used','read','book','story','word','light','world',
+  'heart','dream','season','ocean','garden','silver','golden','simple','poetry','morning','river','forest','wonder','magic',
+  'page','write','mind','space','play','home','life','love','hope','faith','trust','grace','peace','quiet','sound','music',
+  'stand','fall','rise','walk','run','swim','sing','dance','laugh','smile','watch','listen','touch','taste','feel','hear',
+  'speak','learn','teach','grow','change','begin','start','stop','keep','break','build','create','save','win','move','stay',
+  'paper','pencil','window','table','chair','clock','phone','letter','number','color','shape','circle','square','line','point',
+  'water','fire','earth','wind','stone','metal','glass','wood','cloud','storm','snow','rain','sun','moon','star','sky',
+  'happy','angry','quiet','loud','quick','slow','large','small','heavy','clear','dark','bright','warm','cold','soft','hard',
+  'friend','family','school','market','office','street','city','town','field','mountain','valley','island','bridge','road','path',
+  'animal','bird','fish','horse','tiger','eagle','whale','snake','mouse','sheep','plant','flower','grass','leaf','seed','fruit',
+]
+
+const QUOTES = [
+  { text: 'The only way to do great work is to love what you do', source: 'Steve Jobs', length: 'short' },
+  { text: 'In the middle of difficulty lies opportunity for those who are willing to look closely', source: 'Albert Einstein', length: 'medium' },
+  { text: 'Success is not final failure is not fatal it is the courage to continue that counts', source: 'Winston Churchill', length: 'medium' },
+  { text: 'It does not matter how slowly you go as long as you do not stop moving forward toward your goal', source: 'Confucius', length: 'long' },
+  { text: 'The future belongs to those who believe in the beauty of their dreams and chase them daily', source: 'Eleanor Roosevelt', length: 'medium' },
+  { text: 'Do not watch the clock do what it does keep going and never look back at what could have been', source: 'Sam Levenson', length: 'long' },
+]
+
+const CUSTOM_TEXT = 'the quick brown fox jumps over the lazy dog while the curious cat watches from a sunny window above the quiet garden'
+
+const BADGES = [
+  { label: 'turtle', min: 0, max: 20, color: '#646669' },
+  { label: 'steady', min: 21, max: 40, color: '#5fb3b3' },
+  { label: 'swift', min: 41, max: 70, color: '#e2b714' },
+  { label: 'pro', min: 71, max: 100, color: '#e08c4e' },
+  { label: 'legend', min: 101, max: 999, color: '#ca4754' },
+]
+
+const TT_THEMES = {
+  dark: {
+    bg: '#323437', sub: '#646669', subAlt: '#2c2e31', text: '#d1d0c5',
+    main: '#e2b714', error: '#ca4754', errorExtra: '#7e2a33',
+  },
+  light: {
+    bg: '#eaeaea', sub: '#9099a3', subAlt: '#dcdcdc', text: '#444444',
+    main: '#bb9b00', error: '#d4002a', errorExtra: '#e8a0ad',
+  },
+}
+
+function ttRandInt(n) {
+  return Math.floor(Math.random() * n)
+}
+
+function makeWords(count, { punctuation, numbers }) {
+  const out = []
+  let capNext = true
+  for (let i = 0; i < count; i++) {
+    if (numbers && Math.random() < 0.12) {
+      out.push(String(ttRandInt(10000)))
+      continue
+    }
+    let w = WORD_POOL[ttRandInt(WORD_POOL.length)]
+    if (punctuation) {
+      if (capNext) {
+        w = w[0].toUpperCase() + w.slice(1)
+        capNext = false
+      }
+      const r = Math.random()
+      if (r < 0.04) {
+        w = '"' + w + '"'
+      } else if (r > 0.88) {
+        const marks = ['.', ',', '!', '?', ';', ':']
+        const m = marks[ttRandInt(marks.length)]
+        w = w + m
+        if (m === '.' || m === '!' || m === '?') capNext = true
+      }
+    }
+    out.push(w)
   }
-  return a.slice(0, count)
+  return out
+}
+
+function ttCharStats(typedArr, wordsArr, upTo) {
+  let correct = 0, incorrect = 0, extra = 0, missed = 0
+  for (let w = 0; w < typedArr.length; w++) {
+    const t = wordsArr[w] || ''
+    const inp = typedArr[w] || ''
+    const submitted = w < upTo
+    if (!inp && !submitted) continue
+    const minL = Math.min(t.length, inp.length)
+    for (let i = 0; i < minL; i++) {
+      if (inp[i] === t[i]) correct++
+      else incorrect++
+    }
+    if (inp.length > t.length) extra += inp.length - t.length
+    if (submitted) {
+      if (inp.length < t.length) missed += t.length - inp.length
+      correct++
+    }
+  }
+  return { correct, incorrect, extra, missed }
+}
+
+function ttConsistency(samples) {
+  const arr = samples.map((s) => s.raw).filter((x) => x > 0)
+  if (arr.length < 2) return 100
+  const mean = arr.reduce((a, b) => a + b, 0) / arr.length
+  if (mean === 0) return 0
+  const variance = arr.reduce((a, b) => a + (b - mean) ** 2, 0) / arr.length
+  const cv = Math.sqrt(variance) / mean
+  return Math.max(0, Math.min(100, Math.round((1 - cv) * 100)))
 }
 
 function TypingTest() {
-  const ALL_WORDS = [
-    'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this',
-    'but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their',
-    'what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just',
-    'him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now',
-    'look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way',
-    'even','new','want','because','any','these','give','day','most','used','read','book','story','word','light','world',
-    'heart','dream','season','ocean','garden','silver','golden','simple','poetry','morning','river','forest','wonder','magic',
-    'page','write','think','mind','space','time','work','play','home','life','love','hope','faith','trust','grace','peace',
-    'stand','fall','rise','walk','run','swim','fly','sing','dance','laugh','cry','smile','frown','watch','listen','touch',
-    'taste','smell','feel','hear','speak','learn','teach','grow','change','begin','end','start','stop','keep','give',
-    'take','make','break','fix','build','create','destroy','save','lose','win','fail','try','rest','move','stay','come','go'
-  ]
-  const [words, setWords] = useState(() => shuffleArray(ALL_WORDS, 200))
-  const [wordIndex, setWordIndex] = useState(0)
-  const [letterIndex, setLetterIndex] = useState(0)
-  const [input, setInput] = useState('')
-  const [startTime, setStartTime] = useState(null)
-  const [finished, setFinished] = useState(false)
-  const [liveWpm, setLiveWpm] = useState(0)
-  const [liveSeconds, setLiveSeconds] = useState(0)
-  const [wpmData, setWpmData] = useState([])
-  const [charStats, setCharStats] = useState({ correct: 0, incorrect: 0 })
-  const [dark, setDark] = useState(false)
+  const [mode, setMode] = useState('time')
+  const [timeAmount, setTimeAmount] = useState(30)
+  const [wordAmount, setWordAmount] = useState(25)
+  const [punctuation, setPunctuation] = useState(false)
+  const [numbers, setNumbers] = useState(false)
+  const [theme, setTheme] = useState('dark')
+
+  const [words, setWords] = useState([])
+  const [typed, setTyped] = useState([])
+  const [activeWord, setActiveWord] = useState(0)
   const [started, setStarted] = useState(false)
+  const [finished, setFinished] = useState(false)
+  const [elapsed, setElapsed] = useState(0)
+  const [samples, setSamples] = useState([])
+  const [result, setResult] = useState(null)
+  const [focused, setFocused] = useState(true)
+  const [scrollY, setScrollY] = useState(0)
+  const [lineH, setLineH] = useState(44)
+  const [quoteSource, setQuoteSource] = useState('')
+
   const inputRef = useRef(null)
-  const wordIndexRef = useRef(0)
-  const timerRef = useRef(null)
-  const currentWord = words[wordIndex] || ''
-  wordIndexRef.current = wordIndex
+  const activeWordRef = useRef(null)
+  const startTimeRef = useRef(0)
+  const lastSecRef = useRef(0)
+  const errCountRef = useRef(0)
+  const lastErrRef = useRef(0)
 
-  const reset = () => {
-    setWords(shuffleArray(ALL_WORDS, 200))
-    setWordIndex(0)
-    setLetterIndex(0)
-    setInput('')
-    setStartTime(null)
-    setFinished(false)
-    setLiveWpm(0)
-    setLiveSeconds(0)
-    setWpmData([])
-    setCharStats({ correct: 0, incorrect: 0 })
+  const typedRef = useRef(typed)
+  const activeRef = useRef(activeWord)
+  const wordsRef = useRef(words)
+  const modeRef = useRef(mode)
+  const timeAmtRef = useRef(timeAmount)
+  const samplesRef = useRef(samples)
+  const startedRef = useRef(false)
+  const finishedRef = useRef(false)
+
+  typedRef.current = typed
+  activeRef.current = activeWord
+  wordsRef.current = words
+  modeRef.current = mode
+  timeAmtRef.current = timeAmount
+  samplesRef.current = samples
+
+  const c = TT_THEMES[theme]
+
+  const generate = () => {
+    if (mode === 'quote') {
+      const q = QUOTES[ttRandInt(QUOTES.length)]
+      setQuoteSource(q.source)
+      return q.text.split(' ')
+    }
+    if (mode === 'zen') return ['']
+    if (mode === 'custom') return CUSTOM_TEXT.split(/\s+/)
+    const count = mode === 'time' ? Math.max(80, timeAmount * 3) : wordAmount
+    return makeWords(count, { punctuation, numbers })
+  }
+
+  const restart = () => {
+    startedRef.current = false
+    finishedRef.current = false
+    const w = generate()
+    setWords(w)
+    setTyped([])
+    setActiveWord(0)
     setStarted(false)
-    inputRef.current?.focus()
+    setFinished(false)
+    setElapsed(0)
+    setSamples([])
+    setResult(null)
+    setScrollY(0)
+    errCountRef.current = 0
+    lastErrRef.current = 0
+    lastSecRef.current = 0
+    setTimeout(() => inputRef.current?.focus(), 0)
   }
 
-  useEffect(() => {
-    if (finished && timerRef.current) {
-      clearInterval(timerRef.current)
-    }
-  }, [finished])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { restart() }, [mode, timeAmount, wordAmount, punctuation, numbers])
 
   useEffect(() => {
-    const handler = (e) => {
-      if (e.key === 'Tab') {
-        e.preventDefault()
-        reset()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
+    const el = activeWordRef.current
+    if (!el) return
+    const lh = el.offsetHeight || 44
+    setLineH(lh)
+    const top = el.offsetTop
+    setScrollY(top > lh ? top - lh : 0)
+  }, [activeWord, words, theme])
 
-  const handleKeyDown = (e) => {
-    if (!started && !finished && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      setStarted(true)
+  // Keep the word stream topped up in time mode so fast typists never run dry.
+  useEffect(() => {
+    if (mode === 'time' && !finished && words.length > 0 && words.length - activeWord < 20) {
+      setWords((w) => [...w, ...makeWords(40, { punctuation, numbers })])
+    }
+  }, [activeWord, mode, finished, words.length, punctuation, numbers])
+
+  const computeWpm = (st, min) => {
+    if (min <= 0) return { wpm: 0, raw: 0 }
+    return {
+      wpm: Math.round((st.correct / 5) / min),
+      raw: Math.round(((st.correct + st.incorrect + st.extra) / 5) / min),
     }
   }
 
-  const handleChange = (e) => {
-    const val = e.target.value
-    if (!startTime && val.length > 0) {
-      setStartTime(Date.now())
-    }
-    setInput(val)
+  const finish = () => {
+    if (finishedRef.current) return
+    finishedRef.current = true
+    const el = modeRef.current === 'time'
+      ? timeAmtRef.current
+      : (Date.now() - startTimeRef.current) / 1000
+    const upTo = activeRef.current
+    const st = ttCharStats(typedRef.current, wordsRef.current, upTo)
+    const { wpm, raw } = computeWpm(st, el / 60)
+    const totalTyped = st.correct + st.incorrect + st.extra
+    const acc = totalTyped > 0 ? Math.round((st.correct / totalTyped) * 100) : 100
+    const badge = BADGES.find((b) => wpm >= b.min && wpm <= b.max) || BADGES[0]
+    setResult({
+      wpm, raw, acc, chars: st, time: Math.round(el),
+      consistency: ttConsistency(samplesRef.current), badge,
+    })
+    setFinished(true)
+  }
+
+  const start = () => {
+    if (startedRef.current) return
+    startedRef.current = true
+    setStarted(true)
+    startTimeRef.current = Date.now()
+    lastSecRef.current = 0
+    lastErrRef.current = 0
   }
 
   useEffect(() => {
     if (!started || finished) return
-    if (!startTime) return
-
-    timerRef.current = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000
-      setLiveSeconds(Math.floor(elapsed))
-      if (elapsed >= 60) {
-        setFinished(true)
-        clearInterval(timerRef.current)
+    const id = setInterval(() => {
+      const el = (Date.now() - startTimeRef.current) / 1000
+      if (modeRef.current === 'time' && timeAmtRef.current - el <= 0) {
+        finish()
+        return
       }
-    }, 200)
-    return () => clearInterval(timerRef.current)
-  }, [started, finished, startTime])
-
-  useEffect(() => {
-    if (!startTime || finished) return
-    const interval = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000
-      const elapsedMin = elapsed / 60
-      if (elapsedMin > 0) {
-        const wpm = Math.round(wordIndexRef.current / elapsedMin)
-        setLiveWpm(wpm)
-        setWpmData((prev) => [...prev, { second: Math.floor(elapsed), wpm }])
+      const sec = Math.floor(el)
+      if (sec > lastSecRef.current) {
+        lastSecRef.current = sec
+        // Only re-render the tree once per second (the visible countdown is whole seconds).
+        setElapsed(el)
+        const st = ttCharStats(typedRef.current, wordsRef.current, activeRef.current)
+        const { wpm, raw } = computeWpm(st, el / 60)
+        const errDelta = errCountRef.current - lastErrRef.current
+        lastErrRef.current = errCountRef.current
+        setSamples((s) => [...s, { second: sec, wpm, raw, err: errDelta }])
       }
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [startTime, finished])
+    }, 100)
+    return () => clearInterval(id)
+  }, [started, finished])
 
-  useEffect(() => {
-    if (!input) return
-    const word = words[wordIndex]
-    if (!word) return
-    const val = input
-    for (let i = 0; i < Math.min(val.length, word.length); i++) {
-      if (val[i] === word[i]) {
-        setCharStats((prev) => ({ ...prev, correct: prev.correct + 1 }))
-      } else {
-        setCharStats((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }))
-      }
-    }
-  }, [input, wordIndex, words])
+  const handleKeyDown = (e) => {
+    if (e.key === 'Tab') { e.preventDefault(); restart(); return }
+    if (e.key === 'Escape') { e.preventDefault(); restart(); return }
+    if (finished) return
 
-  const handleKeyDownLocal = (e) => {
-    handleKeyDown(e)
     if (e.key === ' ') {
       e.preventDefault()
-      const word = words[wordIndex]
-      const typed = input.trim()
-      if (typed === word) {
-        if (wordIndex < words.length - 1) {
-          setWordIndex((prev) => prev + 1)
-          setLetterIndex(0)
-          setInput('')
-        }
-      } else {
-        if (wordIndex < words.length - 1) {
-          setWordIndex((prev) => prev + 1)
-          setLetterIndex(0)
-          setInput('')
-        }
+      const cur = typed[activeWord] || ''
+      if (cur.length === 0 && mode !== 'zen') return
+      if (!started) start()
+      const next = activeWord + 1
+      if (mode === 'zen') {
+        setTyped((t) => { const n = [...t]; n[next] = ''; return n })
+        setWords((w) => [...w, ''])
+        setActiveWord(next)
+        return
+      }
+      setActiveWord(next)
+      if ((mode === 'words' || mode === 'custom' || mode === 'quote') && next >= words.length) {
+        setTimeout(finish, 0)
       }
       return
     }
+
     if (e.key === 'Backspace') {
       e.preventDefault()
-      setInput((prev) => prev.slice(0, -1))
-      setLetterIndex((prev) => Math.max(0, prev - 1))
+      const cur = typed[activeWord] || ''
+      if (e.ctrlKey || e.altKey || e.metaKey) {
+        setTyped((t) => { const n = [...t]; n[activeWord] = ''; return n })
+        return
+      }
+      if (cur.length > 0) {
+        setTyped((t) => { const n = [...t]; n[activeWord] = cur.slice(0, -1); return n })
+      } else if (activeWord > 0) {
+        const prev = activeWord - 1
+        const pv = typed[prev] || ''
+        if (pv !== words[prev]) setActiveWord(prev)
+      }
       return
     }
+
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault()
+      if (!started) start()
+      const target = words[activeWord] || ''
+      const cur = typed[activeWord] || ''
+      if (mode !== 'zen' && cur.length >= target.length + 8) return
+      const newInput = cur + e.key
+      if (mode !== 'zen') {
+        const idx = cur.length
+        if (e.key !== target[idx]) errCountRef.current += 1
+      }
+      setTyped((t) => { const n = [...t]; n[activeWord] = newInput; return n })
+      if ((mode === 'words' || mode === 'custom' || mode === 'quote')
+        && activeWord === words.length - 1 && newInput === target) {
+        setTimeout(finish, 0)
+      }
+    }
   }
 
-  const stats = useMemo(() => {
-    if (!finished || !startTime) return null
-    const elapsed = (Date.now() - startTime) / 1000
-    const elapsedMin = elapsed / 60
-    const wordsTyped = wordIndex
-    const wpm = wordsTyped > 0 ? Math.round(wordsTyped / elapsedMin) : 0
-    const accuracy = charStats.correct + charStats.incorrect > 0
-      ? Math.round((charStats.correct / (charStats.correct + charStats.incorrect)) * 100)
-      : 100
-    return {
-      wpm,
-      rawWpm: wpm,
-      words: wordsTyped,
-      seconds: Math.round(elapsed),
-      accuracy,
-      badge: BADGES.find((b) => wpm >= b.min && wpm <= b.max) || BADGES[0],
-    }
-  }, [finished, startTime, wordIndex, charStats])
+  const renderWords = () => {
+    return words.map((word, i) => {
+      const inp = typed[i] || ''
+      const isActive = i === activeWord && !finished
+      const isDone = i < activeWord
+      const hasError = isDone && inp !== word
+      const letters = []
+      const maxLen = Math.max(word.length, inp.length)
+      for (let ci = 0; ci < maxLen; ci++) {
+        if (isActive && ci === inp.length) {
+          letters.push(<span key={'car' + ci} className="tt-caret" style={{ background: c.main }} />)
+        }
+        if (ci < word.length) {
+          let col = c.sub
+          if (ci < inp.length) col = inp[ci] === word[ci] ? c.text : c.error
+          letters.push(<span key={ci} style={{ color: col }}>{word[ci]}</span>)
+        } else {
+          letters.push(<span key={ci} style={{ color: c.errorExtra }}>{inp[ci]}</span>)
+        }
+      }
+      if (isActive && inp.length >= maxLen) {
+        letters.push(<span key="car-end" className="tt-caret" style={{ background: c.main }} />)
+      }
+      return (
+        <div
+          key={i}
+          ref={isActive ? activeWordRef : null}
+          className="inline-flex items-center"
+          style={{
+            marginRight: '0.6em',
+            borderBottom: hasError ? `2px solid ${c.error}` : '2px solid transparent',
+            paddingBottom: 2,
+          }}
+        >
+          {letters.length ? letters : <span style={{ color: c.sub }}>{word}</span>}
+        </div>
+      )
+    })
+  }
 
-  const renderWord = (word, index) => {
-    if (index < wordIndex) {
-      return (
-        <span key={`${word}-${index}`} className={`mr-2 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
-          {word}
-        </span>
-      )
-    }
-    if (index > wordIndex + 2) return null
-    if (index > wordIndex) {
-      return (
-        <span key={`${word}-${index}`} className={`mr-2 ${dark ? 'text-gray-400' : 'text-gray-700'}`}>
-          {word}
-        </span>
-      )
-    }
+  const renderGraph = () => {
+    const pad = { l: 28, r: 10, t: 10, b: 18 }
+    const W = 520, H = 200
+    const data = samples.length ? samples : [{ second: 0, wpm: 0, raw: 0, err: 0 }]
+    const maxY = Math.max(10, ...data.map((d) => Math.max(d.wpm, d.raw)))
+    const maxX = Math.max(1, data[data.length - 1].second)
+    const px = (s) => pad.l + (s / maxX) * (W - pad.l - pad.r)
+    const py = (v) => H - pad.b - (v / maxY) * (H - pad.t - pad.b)
+    const line = (key) => data.map((d) => `${px(d.second)},${py(d[key])}`).join(' ')
     return (
-      <span key={`${word}-${index}`} className="relative mr-2 inline">
-        {word.split('').map((char, i) => {
-          if (i < input.length) {
-            if (input[i] === char) {
-              return (
-                <span key={i} className={dark ? 'text-cyan-400' : 'text-emerald-600'}>
-                  {char}
-                </span>
-              )
-            }
-            return (
-              <span key={i} className={dark ? 'text-red-400' : 'text-red-600'}>
-                {input[i]}
-              </span>
-            )
-          }
-          return (
-            <span key={i} className={dark ? 'text-gray-500' : 'text-gray-500'}>
-              {char}
-            </span>
-          )
-        })}
-        {!finished && index === wordIndex && (
-          <span
-            className={`inline-block w-0.5 h-5 animate-pulse ml-0.5 ${dark ? 'bg-cyan-400' : 'bg-brand-600'}`}
-            style={{ verticalAlign: 'text-bottom' }}
-          />
-        )}
-      </span>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 220 }}>
+        {[0, 0.5, 1].map((f, idx) => (
+          <g key={idx}>
+            <line x1={pad.l} x2={W - pad.r} y1={py(maxY * f)} y2={py(maxY * f)} stroke={c.subAlt} strokeWidth="1" />
+            <text x={4} y={py(maxY * f) + 4} fill={c.sub} fontSize="10" fontFamily="monospace">{Math.round(maxY * f)}</text>
+          </g>
+        ))}
+        <polyline fill="none" stroke={c.sub} strokeWidth="2" strokeLinejoin="round" points={line('raw')} opacity="0.6" />
+        <polyline fill="none" stroke={c.main} strokeWidth="2" strokeLinejoin="round" points={line('wpm')} />
+        {data.filter((d) => d.err > 0).map((d, idx) => (
+          <text key={idx} x={px(d.second)} y={py(d.wpm) - 6} fill={c.error} fontSize="12" textAnchor="middle">×</text>
+        ))}
+      </svg>
     )
   }
 
-  const renderChart = () => {
-    if (wpmData.length < 2) return null
-    const width = 500
-    const height = 100
-    const maxWpm = Math.max(...wpmData.map((d) => d.wpm), 10)
-    const maxSecond = Math.max(wpmData[wpmData.length - 1].second, 1)
-    const points = wpmData
-      .map((d) => {
-        const x = (d.second / maxSecond) * width
-        const y = height - (d.wpm / maxWpm) * (height * 0.8) - height * 0.1
-        return `${x},${y}`
-      })
-      .join(' ')
-    return (
-      <div className={`rounded-2xl p-4 overflow-hidden ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-24" preserveAspectRatio="none">
-          <polyline
-            fill="none"
-            stroke="rgb(99 102 241)"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            points={points}
-          />
-        </svg>
-      </div>
-    )
-  }
+  const remaining = Math.max(0, Math.ceil(timeAmount - elapsed))
+  const liveLabel = mode === 'time'
+    ? (started ? remaining : timeAmount)
+    : mode === 'zen'
+      ? activeWord
+      : `${Math.min(activeWord, words.length)}/${words.length}`
 
-  const bgClass = dark ? 'bg-gray-900' : 'bg-gradient-to-br from-cyan-50 via-white to-blue-50'
-  const cardClass = dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200/60'
-  const textPrimary = dark ? 'text-gray-100' : 'text-gray-900'
-  const textSecondary = dark ? 'text-gray-400' : 'text-gray-500'
-  const inputBg = dark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'
-  const resultBg = dark ? 'bg-gray-800' : 'bg-white'
+  const ModeTab = ({ id, label, icon }) => (
+    <button
+      onClick={() => setMode(id)}
+      className="flex items-center gap-1.5 px-2 py-1 text-sm font-mono transition-colors"
+      style={{ color: mode === id ? c.main : c.sub }}
+    >
+      {icon}
+      {label}
+    </button>
+  )
+
+  const Amount = ({ value, current, onClick }) => (
+    <button
+      onClick={onClick}
+      className="px-2 py-1 text-sm font-mono transition-colors"
+      style={{ color: current === value ? c.main : c.sub }}
+    >
+      {value}
+    </button>
+  )
+
+  const Toggle = ({ active, onClick, children }) => (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-1.5 px-2 py-1 text-sm font-mono transition-colors"
+      style={{ color: active ? c.main : c.sub }}
+    >
+      {children}
+    </button>
+  )
 
   return (
-    <div className={`min-h-screen ${bgClass} transition-colors duration-300`}>
+    <div className="min-h-screen w-full font-mono transition-colors" style={{ background: c.bg }}>
       <Head>
         <title>Typing Test — Book Shelfie</title>
-        <meta name="description" content="Test your typing speed with random text. See words per minute and accuracy with animated results." />
+        <meta name="description" content="A clean, minimal typing speed test. Measure your WPM, accuracy and consistency." />
       </Head>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <div className="flex items-center justify-between mb-8">
-          <nav className="flex items-center gap-2 text-sm text-gray-500">
-            <Link href="/" className="hover:text-brand-600 transition-colors">Home</Link>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-            <Link href="/#tools" className="hover:text-brand-600 transition-colors">Tools</Link>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-            <span className={textPrimary}>Typing Test</span>
-          </nav>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        {/* Breadcrumb / brand row */}
+        <div className="flex items-center justify-between mb-10">
+          <Link href="/free-tools" className="flex items-center gap-2 text-sm" style={{ color: c.sub }}>
+            <ToolIcon name="keyboard" className="w-5 h-5" />
+            <span className="font-semibold" style={{ color: c.main }}>typetest</span>
+          </Link>
           <button
-            onClick={() => setDark(!dark)}
-            className={`p-2 rounded-lg ${dark ? 'bg-gray-800 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="text-sm px-3 py-1.5 rounded-lg transition-colors"
+            style={{ background: c.subAlt, color: c.sub }}
           >
-            {dark ? '☀️' : '🌙'}
+            {theme === 'dark' ? 'light' : 'dark'}
           </button>
         </div>
 
-        <div className={`card ${cardClass} p-8 sm:p-12 mb-8`}>
-          <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${dark ? 'bg-gray-700 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
-              <ToolIcon name="keyboard" className="w-8 h-8" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <h1 className={`text-2xl sm:text-3xl font-bold ${textPrimary}`}>Typing Test</h1>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${dark ? 'bg-gray-700 text-cyan-400' : 'bg-emerald-100 text-emerald-700'}`}>
-                  {finished ? 'Finished' : started ? 'In Progress' : 'Active'}
-                </span>
-              </div>
-              <p className={`text-lg leading-relaxed max-w-2xl ${textSecondary}`}>
-                {finished
-                  ? `You typed ${stats?.words} words at ${stats?.wpm} WPM with ${stats?.accuracy}% accuracy.`
-                  : 'Type the words below as fast and accurately as you can. You have 60 seconds.'}
-              </p>
-            </div>
-          </div>
-
-          <div className={`rounded-2xl p-6 sm:p-8 mb-6 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
-            {!started && !finished && (
-              <div className="text-center py-8">
-                <p className={`text-lg mb-4 ${textSecondary}`}>Click here or press any key to start</p>
-                <p className={`text-sm ${textSecondary}`}>60 second time limit</p>
-              </div>
-            )}
-
+        {/* Config bar */}
+        {!finished && (
+          <div className="flex justify-center mb-12">
             <div
-              className={`text-lg sm:text-xl leading-relaxed mb-6 min-h-[120px] ${dark ? 'text-gray-300' : ''}`}
-              onClick={() => inputRef.current?.focus()}
+              className="flex flex-wrap items-center gap-1 rounded-xl px-2 py-1.5 text-sm"
+              style={{ background: c.subAlt }}
             >
-              {words.slice(0, wordIndex + 10).map((word, i) => renderWord(word, i))}
+              <Toggle active={punctuation} onClick={() => setPunctuation((v) => !v)}>
+                <span>@</span> punctuation
+              </Toggle>
+              <Toggle active={numbers} onClick={() => setNumbers((v) => !v)}>
+                <span>#</span> numbers
+              </Toggle>
+
+              <span className="w-px h-5 mx-1" style={{ background: c.bg }} />
+
+              <ModeTab id="time" label="time" icon={<span>⏱</span>} />
+              <ModeTab id="words" label="words" icon={<span>A</span>} />
+              <ModeTab id="quote" label="quote" icon={<span>❝</span>} />
+              <ModeTab id="zen" label="zen" icon={<span>∞</span>} />
+              <ModeTab id="custom" label="custom" icon={<span>⚙</span>} />
+
+              {(mode === 'time' || mode === 'words') && (
+                <span className="w-px h-5 mx-1" style={{ background: c.bg }} />
+              )}
+
+              {mode === 'time' && [15, 30, 60, 120].map((v) => (
+                <Amount key={v} value={v} current={timeAmount} onClick={() => setTimeAmount(v)} />
+              ))}
+              {mode === 'words' && [10, 25, 50, 100].map((v) => (
+                <Amount key={v} value={v} current={wordAmount} onClick={() => setWordAmount(v)} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!finished ? (
+          <>
+            {/* Language */}
+            <div className="flex justify-center mb-6">
+              <div className="flex items-center gap-2 text-sm" style={{ color: c.sub }}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 0c2.5 0 4.5-4 4.5-9S14.5 3 12 3 7.5 7 7.5 12s2 9 4.5 9zM3.5 9h17M3.5 15h17" />
+                </svg>
+                english
+              </div>
             </div>
 
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={handleChange}
-              onKeyDown={handleKeyDownLocal}
-              disabled={finished}
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-              className={`w-full px-4 py-3 text-lg border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-50 ${inputBg}`}
-              placeholder={finished ? 'Finished!' : 'Start typing here...'}
-            />
-
-            <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-              <span>{wordIndex} words</span>
-              <span>{finished ? 'Done' : `${60 - liveSeconds}s | ${liveWpm} WPM`}</span>
+            {/* Live counter */}
+            <div className="mb-3 text-2xl sm:text-3xl" style={{ color: c.main }}>
+              {liveLabel}
             </div>
 
-            {liveSeconds > 0 && !finished && renderChart()}
-
-            {finished && stats && (
-              <div className="mt-6 space-y-3 animate-fadeIn">
-                <div className={`rounded-2xl p-5 shadow-sm ${resultBg}`}>
-                  <div className="text-3xl font-bold text-brand-600 mb-1">{stats.wpm} WPM</div>
-                  <p className={`text-sm ${textSecondary}`}>
-                    {stats.words} words in {stats.seconds}s
-                  </p>
-                </div>
-                <div className={`grid grid-cols-2 gap-3`}>
-                  <div className={`rounded-2xl p-4 ${resultBg}`}>
-                    <div className={`text-xl font-bold ${textPrimary}`}>{stats.accuracy}%</div>
-                    <div className={`text-xs ${textSecondary}`}>Accuracy</div>
-                  </div>
-                  <div className={`rounded-2xl p-4 ${resultBg}`}>
-                    <div className={`text-xl font-bold ${textPrimary}`}>{stats.rawWpm}</div>
-                    <div className={`text-xs ${textSecondary}`}>Raw WPM</div>
-                  </div>
-                </div>
-                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${stats.badge.color}`}>
-                  {stats.badge.label}
+            {/* Words / typing area */}
+            <div
+              className="relative cursor-text outline-none"
+              tabIndex={0}
+              onClick={() => inputRef.current?.focus()}
+              style={{ height: lineH * 3 }}
+            >
+              <div
+                className="overflow-hidden"
+                style={{ height: lineH * 3, filter: focused ? 'none' : 'blur(5px)', transition: 'filter .15s' }}
+              >
+                <div
+                  className="relative flex flex-wrap text-2xl sm:text-3xl"
+                  style={{ transform: `translateY(-${scrollY}px)`, transition: 'transform .15s', lineHeight: '1.6' }}
+                >
+                  {renderWords()}
                 </div>
               </div>
-            )}
-          </div>
 
-          <button onClick={reset} className="btn-secondary">
-            Try Again
-          </button>
-        </div>
+              {!focused && (
+                <div className="absolute inset-0 flex items-center justify-center" style={{ color: c.text }}>
+                  <span className="text-base">click here or press any key to focus</span>
+                </div>
+              )}
+
+              <input
+                ref={inputRef}
+                type="text"
+                value=""
+                onChange={() => {}}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck="false"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-text"
+                aria-label="Typing input"
+              />
+            </div>
+
+            {/* Restart */}
+            <div className="flex justify-center mt-12">
+              <button
+                onClick={restart}
+                title="Restart test (Tab)"
+                className="p-3 rounded-lg transition-colors hover:opacity-100"
+                style={{ color: c.sub }}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="text-center text-xs mt-6" style={{ color: c.sub }}>
+              <span style={{ color: c.text }}>tab</span> + restart &nbsp;·&nbsp; <span style={{ color: c.text }}>esc</span> + restart
+            </p>
+          </>
+        ) : (
+          /* Results */
+          <div className="animate-fadeIn">
+            <div className="flex flex-col lg:flex-row items-center gap-8 mb-10">
+              <div className="flex flex-col items-center lg:items-start">
+                <div className="text-sm" style={{ color: c.sub }}>wpm</div>
+                <div className="text-6xl sm:text-7xl font-bold leading-none" style={{ color: c.main }}>{result.wpm}</div>
+                <div className="text-sm mt-4" style={{ color: c.sub }}>acc</div>
+                <div className="text-4xl sm:text-5xl font-bold leading-none" style={{ color: c.main }}>{result.acc}%</div>
+                <div
+                  className="mt-4 px-3 py-1 rounded-full text-xs font-semibold"
+                  style={{ background: c.subAlt, color: result.badge.color }}
+                >
+                  {result.badge.label}
+                </div>
+              </div>
+              <div className="flex-1 w-full rounded-xl p-4" style={{ background: c.subAlt }}>
+                {renderGraph()}
+                <div className="flex justify-center gap-6 mt-2 text-xs" style={{ color: c.sub }}>
+                  <span><span style={{ color: c.main }}>—</span> wpm</span>
+                  <span><span style={{ color: c.sub }}>—</span> raw</span>
+                  <span><span style={{ color: c.error }}>×</span> errors</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+              {[
+                { label: 'test type', value: mode === 'time' ? `time ${timeAmount}` : mode === 'words' ? `words ${wordAmount}` : mode },
+                { label: 'raw', value: result.raw },
+                { label: 'characters', value: `${result.chars.correct}/${result.chars.incorrect}/${result.chars.extra}/${result.chars.missed}` },
+                { label: 'consistency', value: `${result.consistency}%` },
+                { label: 'time', value: `${result.time}s` },
+                { label: 'accuracy', value: `${result.acc}%` },
+                { label: 'words', value: activeWord },
+                { label: 'source', value: mode === 'quote' ? quoteSource : 'english' },
+              ].map((s, idx) => (
+                <div key={idx}>
+                  <div className="text-xs" style={{ color: c.sub }}>{s.label}</div>
+                  <div className="text-xl sm:text-2xl" style={{ color: c.main }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={restart}
+                className="px-6 py-3 rounded-lg text-sm font-semibold transition-colors"
+                style={{ background: c.main, color: c.bg }}
+              >
+                next test
+              </button>
+              <Link
+                href="/free-tools"
+                className="px-6 py-3 rounded-lg text-sm font-semibold transition-colors"
+                style={{ background: c.subAlt, color: c.sub }}
+              >
+                back to tools
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1568,13 +1821,7 @@ export default function ToolDetail() {
 
   // Handle Typing Test
   if (id === 'typing-test') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50">
-        <main className="max-w-4xl mx-auto px-4 py-12">
-          <TypingTest />
-        </main>
-      </div>
-    )
+    return <TypingTest />
   }
 
   // Handle AI Prompt Generator specifically
