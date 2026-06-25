@@ -172,7 +172,7 @@ function TypingTest() {
   const [wordAmount, setWordAmount] = useState(25)
   const [punctuation, setPunctuation] = useState(false)
   const [numbers, setNumbers] = useState(false)
-  const [theme, setTheme] = useState('dark')
+  const [theme, setTheme] = useState('light')
 
   const [words, setWords] = useState([])
   const [typed, setTyped] = useState([])
@@ -199,6 +199,9 @@ function TypingTest() {
   const wordsRef = useRef(words)
   const modeRef = useRef(mode)
   const timeAmtRef = useRef(timeAmount)
+  const wordAmtRef = useRef(wordAmount)
+  const punctRef = useRef(punctuation)
+  const numRef = useRef(numbers)
   const samplesRef = useRef(samples)
   const startedRef = useRef(false)
   const finishedRef = useRef(false)
@@ -208,20 +211,24 @@ function TypingTest() {
   wordsRef.current = words
   modeRef.current = mode
   timeAmtRef.current = timeAmount
+  wordAmtRef.current = wordAmount
+  punctRef.current = punctuation
+  numRef.current = numbers
   samplesRef.current = samples
 
   const c = TT_THEMES[theme]
 
   const generate = () => {
-    if (mode === 'quote') {
+    const m = modeRef.current
+    if (m === 'quote') {
       const q = QUOTES[ttRandInt(QUOTES.length)]
       setQuoteSource(q.source)
       return q.text.split(' ')
     }
-    if (mode === 'zen') return ['']
-    if (mode === 'custom') return CUSTOM_TEXT.split(/\s+/)
-    const count = mode === 'time' ? Math.max(80, timeAmount * 3) : wordAmount
-    return makeWords(count, { punctuation, numbers })
+    if (m === 'zen') return ['']
+    if (m === 'custom') return CUSTOM_TEXT.split(/\s+/)
+    const count = m === 'time' ? Math.max(80, timeAmtRef.current * 3) : wordAmtRef.current
+    return makeWords(count, { punctuation: punctRef.current, numbers: numRef.current })
   }
 
   const restart = () => {
@@ -454,37 +461,6 @@ function TypingTest() {
       ? activeWord
       : `${Math.min(activeWord, words.length)}/${words.length}`
 
-  const ModeTab = ({ id, label, icon }) => (
-    <button
-      onClick={() => setMode(id)}
-      className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
-      style={{ color: mode === id ? c.main : c.sub }}
-    >
-      {icon}
-      {label}
-    </button>
-  )
-
-  const Amount = ({ value, current, onClick }) => (
-    <button
-      onClick={onClick}
-      className="px-2 py-1 text-sm transition-colors"
-      style={{ color: current === value ? c.main : c.sub }}
-    >
-      {value}
-    </button>
-  )
-
-  const Toggle = ({ active, onClick, children }) => (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
-      style={{ color: active ? c.main : c.sub }}
-    >
-      {children}
-    </button>
-  )
-
   return (
     <div className="min-h-screen w-full transition-colors" style={{ background: c.bg }}>
       <Head>
@@ -515,30 +491,64 @@ function TypingTest() {
               className="flex flex-wrap items-center gap-1 rounded-xl px-2 py-1.5 text-sm"
               style={{ background: c.subAlt }}
             >
-              <Toggle active={punctuation} onClick={() => setPunctuation((v) => !v)}>
+              <button
+                onClick={() => setPunctuation((v) => !v)}
+                className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
+                style={{ color: punctuation ? c.main : c.sub }}
+              >
                 <span>@</span> punctuation
-              </Toggle>
-              <Toggle active={numbers} onClick={() => setNumbers((v) => !v)}>
+              </button>
+              <button
+                onClick={() => setNumbers((v) => !v)}
+                className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
+                style={{ color: numbers ? c.main : c.sub }}
+              >
                 <span>#</span> numbers
-              </Toggle>
+              </button>
 
               <span className="w-px h-5 mx-1" style={{ background: c.bg }} />
 
-              <ModeTab id="time" label="time" icon={<span>⏱</span>} />
-              <ModeTab id="words" label="words" icon={<span>A</span>} />
-              <ModeTab id="quote" label="quote" icon={<span>❝</span>} />
-              <ModeTab id="zen" label="zen" icon={<span>∞</span>} />
-              <ModeTab id="custom" label="custom" icon={<span>⚙</span>} />
+              {[
+                { id: 'time', label: 'time', icon: '⏱' },
+                { id: 'words', label: 'words', icon: 'A' },
+                { id: 'quote', label: 'quote', icon: '❝' },
+                { id: 'zen', label: 'zen', icon: '∞' },
+                { id: 'custom', label: 'custom', icon: '⚙' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setMode(t.id)}
+                  className="flex items-center gap-1.5 px-2 py-1 text-sm transition-colors"
+                  style={{ color: mode === t.id ? c.main : c.sub }}
+                >
+                  <span>{t.icon}</span>
+                  {t.label}
+                </button>
+              ))}
 
               {(mode === 'time' || mode === 'words') && (
                 <span className="w-px h-5 mx-1" style={{ background: c.bg }} />
               )}
 
               {mode === 'time' && [15, 30, 60, 120].map((v) => (
-                <Amount key={v} value={v} current={timeAmount} onClick={() => setTimeAmount(v)} />
+                <button
+                  key={v}
+                  onClick={() => setTimeAmount(v)}
+                  className="px-2 py-1 text-sm transition-colors"
+                  style={{ color: timeAmount === v ? c.main : c.sub }}
+                >
+                  {v}
+                </button>
               ))}
               {mode === 'words' && [10, 25, 50, 100].map((v) => (
-                <Amount key={v} value={v} current={wordAmount} onClick={() => setWordAmount(v)} />
+                <button
+                  key={v}
+                  onClick={() => setWordAmount(v)}
+                  className="px-2 py-1 text-sm transition-colors"
+                  style={{ color: wordAmount === v ? c.main : c.sub }}
+                >
+                  {v}
+                </button>
               ))}
             </div>
           </div>
