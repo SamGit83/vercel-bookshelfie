@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import Head from 'next/head'
@@ -15,6 +15,8 @@ const iconColors = {
   indigo: 'bg-indigo-50 text-indigo-600',
   teal: 'bg-teal-50 text-teal-600',
   pink: 'bg-pink-50 text-pink-600',
+  cyan: 'bg-cyan-50 text-cyan-600',
+  slate: 'bg-slate-50 text-slate-600',
 }
 
 const iconBadgeColors = {
@@ -27,6 +29,8 @@ const iconBadgeColors = {
   indigo: 'bg-indigo-100 text-indigo-700',
   teal: 'bg-teal-100 text-teal-700',
   pink: 'bg-pink-100 text-pink-700',
+  cyan: 'bg-cyan-100 text-cyan-700',
+  slate: 'bg-slate-100 text-slate-700',
 }
 
 function ToolIcon({ name, className }) {
@@ -40,12 +44,337 @@ function ToolIcon({ name, className }) {
     sparkles: <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />,
     bookOpen: <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />,
     users: <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />,
+    keyboard: <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V15zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V15zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V17.25a4.5 4.5 0 004.5 4.5h7.5a4.5 4.5 0 004.5-4.5V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />,
   }
 
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       {icons[name] || icons.bookOpen}
     </svg>
+  )
+}
+
+const WORDS = [
+  'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this',
+  'but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their',
+  'what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just',
+  'him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now',
+  'look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way',
+  'even','new','want','because','any','these','give','day','most','used','read','book','story','word','light','world',
+  'heart','dream','season','ocean','garden','silver','golden','simple','poetry','morning','river','forest','wonder','magic'
+]
+
+const BADGES = [
+  { label: '🐢 Beginner', min: 0, max: 20, color: 'bg-gray-100 text-gray-700' },
+  { label: '🐇 Average', min: 21, max: 40, color: 'bg-blue-100 text-blue-700' },
+  { label: '⚡ Fast', min: 41, max: 70, color: 'bg-amber-100 text-amber-700' },
+  { label: '🔥 Pro', min: 71, max: 100, color: 'bg-orange-100 text-orange-700' },
+  { label: '🚀 Legend', min: 101, max: 999, color: 'bg-rose-100 text-rose-700' },
+]
+
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a.slice(0, 20)
+}
+
+function shuffleArray(arr, count) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a.slice(0, count)
+}
+
+function TypingTest() {
+  const ALL_WORDS = [
+    'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this',
+    'but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their',
+    'what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just',
+    'him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now',
+    'look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way',
+    'even','new','want','because','any','these','give','day','most','used','read','book','story','word','light','world',
+    'heart','dream','season','ocean','garden','silver','golden','simple','poetry','morning','river','forest','wonder','magic',
+    'page','write','think','mind','space','time','work','play','home','life','love','hope','faith','trust','grace','peace',
+    'stand','fall','rise','walk','run','swim','fly','sing','dance','laugh','cry','smile','frown','watch','listen','touch',
+    'taste','smell','feel','hear','speak','learn','teach','grow','change','begin','end','start','stop','keep','give',
+    'take','make','break','fix','build','create','destroy','save','lose','win','fail','try','rest','move','stay','come','go'
+  ]
+  const [wordCount, setWordCount] = useState(50)
+  const [words, setWords] = useState(() => shuffleArray(ALL_WORDS, 50))
+  const [wordIndex, setWordIndex] = useState(0)
+  const [input, setInput] = useState('')
+  const [startTime, setStartTime] = useState(null)
+  const [finished, setFinished] = useState(false)
+  const [liveWpm, setLiveWpm] = useState(0)
+  const [liveSeconds, setLiveSeconds] = useState(0)
+  const [wpmData, setWpmData] = useState([])
+  const inputRef = useRef(null)
+  const wordIndexRef = useRef(0)
+  const timerRef = useRef(null)
+  const currentWord = words[wordIndex] || ''
+  wordIndexRef.current = wordIndex
+
+  const reset = (count = 50) => {
+    setWordCount(count)
+    setWords(shuffleArray(ALL_WORDS, count))
+    setWordIndex(0)
+    setInput('')
+    setStartTime(null)
+    setFinished(false)
+    setLiveWpm(0)
+    setLiveSeconds(0)
+    setWpmData([])
+    inputRef.current?.focus()
+  }
+
+  useEffect(() => {
+    if (finished && timerRef.current) {
+      clearInterval(timerRef.current)
+      inputRef.current?.blur()
+    }
+  }, [finished])
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      reset(wordCount)
+      return
+    }
+    if (e.key === 'Escape') {
+      reset(wordCount)
+      return
+    }
+    if (e.key === 'Backspace' && input === '' && wordIndex > 0 && !finished) {
+      e.preventDefault()
+      setWordIndex((prev) => prev - 1)
+      setInput('')
+      return
+    }
+  }
+
+  const handleChange = (e) => {
+    const val = e.target.value
+    if (val.endsWith(' ')) {
+      if (!startTime) setStartTime(Date.now())
+      if (wordIndex < words.length - 1) {
+        setWordIndex((prev) => prev + 1)
+        setInput('')
+      } else {
+        setFinished(true)
+      }
+      return
+    }
+    setInput(val)
+    if (!startTime && val.length > 0) setStartTime(Date.now())
+  }
+
+  useEffect(() => {
+    if (!startTime || finished) return
+    timerRef.current = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000
+      setLiveSeconds((prev) => prev + 1)
+      const elapsedMin = elapsed / 60
+      if (elapsedMin > 0) {
+        const wpm = Math.round(wordIndexRef.current / elapsedMin)
+        setLiveWpm(wpm)
+        setWpmData((prev) => [...prev, { second: Math.floor(elapsed), wpm }])
+      }
+    }, 1000)
+    return () => clearInterval(timerRef.current)
+  }, [startTime, finished])
+
+  const stats = useMemo(() => {
+    if (!finished || !startTime) return null
+    const elapsed = (Date.now() - startTime) / 1000
+    const elapsedMin = elapsed / 60
+    const wordsTyped = wordIndex
+    const wpm = wordsTyped > 0 ? Math.round(wordsTyped / elapsedMin) : 0
+    return {
+      wpm,
+      rawWpm: wpm,
+      words: wordsTyped,
+      seconds: Math.round(elapsed),
+      badge: BADGES.find((b) => wpm >= b.min && wpm <= b.max) || BADGES[0],
+    }
+  }, [finished, startTime, wordIndex])
+
+  const renderWord = (word, index) => {
+    if (index < wordIndex) {
+      return (
+        <span key={`${word}-${index}`} className="text-gray-400 line-through mr-2">
+          {word}
+        </span>
+      )
+    }
+    if (index > wordIndex) {
+      return (
+        <span key={`${word}-${index}`} className="text-gray-700 mr-2">
+          {word}
+        </span>
+      )
+    }
+    return (
+      <span key={`${word}-${index}`} className="relative mr-2 inline">
+        {word.split('').map((char, i) => {
+          if (i < input.length) {
+            if (input[i] === char) {
+              return (
+                <span key={i} className="text-emerald-600">
+                  {char}
+                </span>
+              )
+            }
+            return (
+              <span key={i} className="text-red-600">
+                {input[i]}
+              </span>
+            )
+          }
+          return (
+            <span key={i} className="text-gray-500">
+              {char}
+            </span>
+          )
+        })}
+        {!finished && (
+          <span
+            className="inline-block w-0.5 h-5 bg-brand-600 animate-pulse ml-0.5"
+            style={{ verticalAlign: 'text-bottom' }}
+          />
+        )}
+      </span>
+    )
+  }
+
+  const renderChart = () => {
+    if (wpmData.length < 2) return null
+    const width = 500
+    const height = 100
+    const maxWpm = Math.max(...wpmData.map((d) => d.wpm), 10)
+    const maxSecond = Math.max(wpmData[wpmData.length - 1].second, 1)
+    const points = wpmData
+      .map((d) => {
+        const x = (d.second / maxSecond) * width
+        const y = height - (d.wpm / maxWpm) * (height * 0.8) - height * 0.1
+        return `${x},${y}`
+      })
+      .join(' ')
+    return (
+      <div className="bg-gray-50 rounded-2xl p-4 overflow-hidden">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-24" preserveAspectRatio="none">
+          <polyline
+            fill="none"
+            stroke="rgb(99 102 241)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            points={points}
+          />
+        </svg>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <Head>
+        <title>Typing Test — Book Shelfie</title>
+        <meta name="description" content="Test your typing speed with random text. See words per minute and accuracy with animated results." />
+      </Head>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
+          <Link href="/" className="hover:text-brand-600 transition-colors">
+            Home
+          </Link>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+          <Link href="/#tools" className="hover:text-brand-600 transition-colors">
+            Tools
+          </Link>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+          <span className="text-gray-900 font-medium">Typing Test</span>
+        </nav>
+
+        <div className="card p-8 sm:p-12 mb-8">
+          <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-cyan-50 text-cyan-600">
+              <ToolIcon name="keyboard" className="w-8 h-8" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Typing Test</h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Active</span>
+              </div>
+              <p className="text-lg text-gray-500 leading-relaxed max-w-2xl">
+                Test your typing speed with random words. Type each word and press space to continue. See your WPM and speed badge at the end.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6 text-lg sm:text-xl leading-relaxed">
+              {words.map((word, i) => renderWord(word, i))}
+            </div>
+
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              disabled={finished}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck="false"
+              className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:bg-gray-100"
+              placeholder={finished ? 'Finished!' : 'Start typing here...'}
+            />
+
+            <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
+              <span>{Math.min(wordIndex + 1, words.length)} / {words.length} words</span>
+              <span>{finished ? 'Done' : `${liveSeconds}s | ${liveWpm} WPM`}</span>
+            </div>
+
+            {liveSeconds > 0 && !finished && renderChart()}
+
+            {finished && stats && (
+              <div className="mt-6 space-y-3">
+                <div className="bg-white rounded-2xl p-5 shadow-sm">
+                  <div className="text-3xl font-bold text-brand-600 mb-1">{stats.wpm} WPM</div>
+                  <p className="text-sm text-gray-500">
+                    {stats.words} words in {stats.seconds}s
+                  </p>
+                </div>
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${stats.badge.color}`}>
+                  {stats.badge.label}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button onClick={() => reset(25)} className="btn-secondary">
+              25 words
+            </button>
+            <button onClick={() => reset(50)} className="btn-primary">
+              50 words
+            </button>
+            <button onClick={() => reset(100)} className="btn-secondary">
+              100 words
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -1179,6 +1508,17 @@ function BookRecommendationQuiz() {
 export default function ToolDetail() {
   const router = useRouter()
   const { id } = router.query
+
+  // Handle Typing Test
+  if (id === 'typing-test') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50">
+        <main className="max-w-4xl mx-auto px-4 py-12">
+          <TypingTest />
+        </main>
+      </div>
+    )
+  }
 
   // Handle AI Prompt Generator specifically
   if (id === 'ai-prompt-generator') {

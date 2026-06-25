@@ -14,7 +14,7 @@ export default function FreeTools() {
         <div className="mb-12">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Free Tools</h1>
           <p className="text-lg text-gray-500 max-w-2xl">
-            Everything you need to level up your reading game. All tools are completely free to use.
+            Use these free tools to test your typing speed and improve your reading experience.
           </p>
         </div>
         
