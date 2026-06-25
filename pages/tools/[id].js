@@ -642,7 +642,7 @@ function TypingTest() {
                 <div className="text-4xl sm:text-5xl font-bold leading-none" style={{ color: c.main }}>{result.acc}%</div>
                 <div
                   className="mt-4 px-3 py-1 rounded-full text-xs font-semibold"
-                  style={{ background: c.subAlt, color: result.badge.color }}
+                  style={{ background: result.badge.color, color: '#fff' }}
                 >
                   {result.badge.label}
                 </div>
