@@ -54,33 +54,6 @@ function ToolIcon({ name, className }) {
   )
 }
 
-const WORDS = [
-  'the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this',
-  'but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their',
-  'what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just',
-  'him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now',
-  'look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way',
-  'even','new','want','because','any','these','give','day','most','used','read','book','story','word','light','world',
-  'heart','dream','season','ocean','garden','silver','golden','simple','poetry','morning','river','forest','wonder','magic'
-]
-
-const BADGES = [
-  { label: '🐢 Beginner', min: 0, max: 20, color: 'bg-gray-100 text-gray-700' },
-  { label: '🐇 Average', min: 21, max: 40, color: 'bg-blue-100 text-blue-700' },
-  { label: '⚡ Fast', min: 41, max: 70, color: 'bg-amber-100 text-amber-700' },
-  { label: '🔥 Pro', min: 71, max: 100, color: 'bg-orange-100 text-orange-700' },
-  { label: '🚀 Legend', min: 101, max: 999, color: 'bg-rose-100 text-rose-700' },
-]
-
-function shuffle(arr) {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a.slice(0, 20)
-}
-
 function shuffleArray(arr, count) {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -104,80 +77,89 @@ function TypingTest() {
     'taste','smell','feel','hear','speak','learn','teach','grow','change','begin','end','start','stop','keep','give',
     'take','make','break','fix','build','create','destroy','save','lose','win','fail','try','rest','move','stay','come','go'
   ]
-  const [wordCount, setWordCount] = useState(50)
-  const [words, setWords] = useState(() => shuffleArray(ALL_WORDS, 50))
+  const [words, setWords] = useState(() => shuffleArray(ALL_WORDS, 200))
   const [wordIndex, setWordIndex] = useState(0)
+  const [letterIndex, setLetterIndex] = useState(0)
   const [input, setInput] = useState('')
   const [startTime, setStartTime] = useState(null)
   const [finished, setFinished] = useState(false)
   const [liveWpm, setLiveWpm] = useState(0)
   const [liveSeconds, setLiveSeconds] = useState(0)
   const [wpmData, setWpmData] = useState([])
+  const [charStats, setCharStats] = useState({ correct: 0, incorrect: 0 })
+  const [dark, setDark] = useState(false)
+  const [started, setStarted] = useState(false)
   const inputRef = useRef(null)
   const wordIndexRef = useRef(0)
   const timerRef = useRef(null)
   const currentWord = words[wordIndex] || ''
   wordIndexRef.current = wordIndex
 
-  const reset = (count = 50) => {
-    setWordCount(count)
-    setWords(shuffleArray(ALL_WORDS, count))
+  const reset = () => {
+    setWords(shuffleArray(ALL_WORDS, 200))
     setWordIndex(0)
+    setLetterIndex(0)
     setInput('')
     setStartTime(null)
     setFinished(false)
     setLiveWpm(0)
     setLiveSeconds(0)
     setWpmData([])
+    setCharStats({ correct: 0, incorrect: 0 })
+    setStarted(false)
     inputRef.current?.focus()
   }
 
   useEffect(() => {
     if (finished && timerRef.current) {
       clearInterval(timerRef.current)
-      inputRef.current?.blur()
     }
   }, [finished])
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault()
+        reset()
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const handleKeyDown = (e) => {
-    if (e.key === 'Tab') {
-      e.preventDefault()
-      reset(wordCount)
-      return
-    }
-    if (e.key === 'Escape') {
-      reset(wordCount)
-      return
-    }
-    if (e.key === 'Backspace' && input === '' && wordIndex > 0 && !finished) {
-      e.preventDefault()
-      setWordIndex((prev) => prev - 1)
-      setInput('')
-      return
+    if (!started && !finished && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      setStarted(true)
     }
   }
 
   const handleChange = (e) => {
     const val = e.target.value
-    if (val.endsWith(' ')) {
-      if (!startTime) setStartTime(Date.now())
-      if (wordIndex < words.length - 1) {
-        setWordIndex((prev) => prev + 1)
-        setInput('')
-      } else {
-        setFinished(true)
-      }
-      return
+    if (!startTime && val.length > 0) {
+      setStartTime(Date.now())
     }
     setInput(val)
-    if (!startTime && val.length > 0) setStartTime(Date.now())
   }
 
   useEffect(() => {
-    if (!startTime || finished) return
+    if (!started || finished) return
+    if (!startTime) return
+
     timerRef.current = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000
-      setLiveSeconds((prev) => prev + 1)
+      setLiveSeconds(Math.floor(elapsed))
+      if (elapsed >= 60) {
+        setFinished(true)
+        clearInterval(timerRef.current)
+      }
+    }, 200)
+    return () => clearInterval(timerRef.current)
+  }, [started, finished, startTime])
+
+  useEffect(() => {
+    if (!startTime || finished) return
+    const interval = setInterval(() => {
+      const elapsed = (Date.now() - startTime) / 1000
       const elapsedMin = elapsed / 60
       if (elapsedMin > 0) {
         const wpm = Math.round(wordIndexRef.current / elapsedMin)
@@ -185,8 +167,51 @@ function TypingTest() {
         setWpmData((prev) => [...prev, { second: Math.floor(elapsed), wpm }])
       }
     }, 1000)
-    return () => clearInterval(timerRef.current)
+    return () => clearInterval(interval)
   }, [startTime, finished])
+
+  useEffect(() => {
+    if (!input) return
+    const word = words[wordIndex]
+    if (!word) return
+    const val = input
+    for (let i = 0; i < Math.min(val.length, word.length); i++) {
+      if (val[i] === word[i]) {
+        setCharStats((prev) => ({ ...prev, correct: prev.correct + 1 }))
+      } else {
+        setCharStats((prev) => ({ ...prev, incorrect: prev.incorrect + 1 }))
+      }
+    }
+  }, [input, wordIndex, words])
+
+  const handleKeyDownLocal = (e) => {
+    handleKeyDown(e)
+    if (e.key === ' ') {
+      e.preventDefault()
+      const word = words[wordIndex]
+      const typed = input.trim()
+      if (typed === word) {
+        if (wordIndex < words.length - 1) {
+          setWordIndex((prev) => prev + 1)
+          setLetterIndex(0)
+          setInput('')
+        }
+      } else {
+        if (wordIndex < words.length - 1) {
+          setWordIndex((prev) => prev + 1)
+          setLetterIndex(0)
+          setInput('')
+        }
+      }
+      return
+    }
+    if (e.key === 'Backspace') {
+      e.preventDefault()
+      setInput((prev) => prev.slice(0, -1))
+      setLetterIndex((prev) => Math.max(0, prev - 1))
+      return
+    }
+  }
 
   const stats = useMemo(() => {
     if (!finished || !startTime) return null
@@ -194,26 +219,31 @@ function TypingTest() {
     const elapsedMin = elapsed / 60
     const wordsTyped = wordIndex
     const wpm = wordsTyped > 0 ? Math.round(wordsTyped / elapsedMin) : 0
+    const accuracy = charStats.correct + charStats.incorrect > 0
+      ? Math.round((charStats.correct / (charStats.correct + charStats.incorrect)) * 100)
+      : 100
     return {
       wpm,
       rawWpm: wpm,
       words: wordsTyped,
       seconds: Math.round(elapsed),
+      accuracy,
       badge: BADGES.find((b) => wpm >= b.min && wpm <= b.max) || BADGES[0],
     }
-  }, [finished, startTime, wordIndex])
+  }, [finished, startTime, wordIndex, charStats])
 
   const renderWord = (word, index) => {
     if (index < wordIndex) {
       return (
-        <span key={`${word}-${index}`} className="text-gray-400 line-through mr-2">
+        <span key={`${word}-${index}`} className={`mr-2 ${dark ? 'text-gray-600' : 'text-gray-400'}`}>
           {word}
         </span>
       )
     }
+    if (index > wordIndex + 2) return null
     if (index > wordIndex) {
       return (
-        <span key={`${word}-${index}`} className="text-gray-700 mr-2">
+        <span key={`${word}-${index}`} className={`mr-2 ${dark ? 'text-gray-400' : 'text-gray-700'}`}>
           {word}
         </span>
       )
@@ -224,26 +254,26 @@ function TypingTest() {
           if (i < input.length) {
             if (input[i] === char) {
               return (
-                <span key={i} className="text-emerald-600">
+                <span key={i} className={dark ? 'text-cyan-400' : 'text-emerald-600'}>
                   {char}
                 </span>
               )
             }
             return (
-              <span key={i} className="text-red-600">
+              <span key={i} className={dark ? 'text-red-400' : 'text-red-600'}>
                 {input[i]}
               </span>
             )
           }
           return (
-            <span key={i} className="text-gray-500">
+            <span key={i} className={dark ? 'text-gray-500' : 'text-gray-500'}>
               {char}
             </span>
           )
         })}
-        {!finished && (
+        {!finished && index === wordIndex && (
           <span
-            className="inline-block w-0.5 h-5 bg-brand-600 animate-pulse ml-0.5"
+            className={`inline-block w-0.5 h-5 animate-pulse ml-0.5 ${dark ? 'bg-cyan-400' : 'bg-brand-600'}`}
             style={{ verticalAlign: 'text-bottom' }}
           />
         )}
@@ -265,7 +295,7 @@ function TypingTest() {
       })
       .join(' ')
     return (
-      <div className="bg-gray-50 rounded-2xl p-4 overflow-hidden">
+      <div className={`rounded-2xl p-4 overflow-hidden ${dark ? 'bg-gray-800' : 'bg-gray-50'}`}>
         <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-24" preserveAspectRatio="none">
           <polyline
             fill="none"
@@ -280,48 +310,73 @@ function TypingTest() {
     )
   }
 
+  const bgClass = dark ? 'bg-gray-900' : 'bg-gradient-to-br from-cyan-50 via-white to-blue-50'
+  const cardClass = dark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200/60'
+  const textPrimary = dark ? 'text-gray-100' : 'text-gray-900'
+  const textSecondary = dark ? 'text-gray-400' : 'text-gray-500'
+  const inputBg = dark ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-200'
+  const resultBg = dark ? 'bg-gray-800' : 'bg-white'
+
   return (
-    <>
+    <div className={`min-h-screen ${bgClass} transition-colors duration-300`}>
       <Head>
         <title>Typing Test — Book Shelfie</title>
         <meta name="description" content="Test your typing speed with random text. See words per minute and accuracy with animated results." />
       </Head>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">
-          <Link href="/" className="hover:text-brand-600 transition-colors">
-            Home
-          </Link>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-          <Link href="/#tools" className="hover:text-brand-600 transition-colors">
-            Tools
-          </Link>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-          <span className="text-gray-900 font-medium">Typing Test</span>
-        </nav>
+        <div className="flex items-center justify-between mb-8">
+          <nav className="flex items-center gap-2 text-sm text-gray-500">
+            <Link href="/" className="hover:text-brand-600 transition-colors">Home</Link>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+            <Link href="/#tools" className="hover:text-brand-600 transition-colors">Tools</Link>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+            <span className={textPrimary}>Typing Test</span>
+          </nav>
+          <button
+            onClick={() => setDark(!dark)}
+            className={`p-2 rounded-lg ${dark ? 'bg-gray-800 text-yellow-400' : 'bg-gray-100 text-gray-600'}`}
+          >
+            {dark ? '☀️' : '🌙'}
+          </button>
+        </div>
 
-        <div className="card p-8 sm:p-12 mb-8">
+        <div className={`card ${cardClass} p-8 sm:p-12 mb-8`}>
           <div className="flex flex-col sm:flex-row items-start gap-6 mb-8">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-cyan-50 text-cyan-600">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${dark ? 'bg-gray-700 text-cyan-400' : 'bg-cyan-50 text-cyan-600'}`}>
               <ToolIcon name="keyboard" className="w-8 h-8" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Typing Test</h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Active</span>
+                <h1 className={`text-2xl sm:text-3xl font-bold ${textPrimary}`}>Typing Test</h1>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${dark ? 'bg-gray-700 text-cyan-400' : 'bg-emerald-100 text-emerald-700'}`}>
+                  {finished ? 'Finished' : started ? 'In Progress' : 'Active'}
+                </span>
               </div>
-              <p className="text-lg text-gray-500 leading-relaxed max-w-2xl">
-                Test your typing speed with random words. Type each word and press space to continue. See your WPM and speed badge at the end.
+              <p className={`text-lg leading-relaxed max-w-2xl ${textSecondary}`}>
+                {finished
+                  ? `You typed ${stats?.words} words at ${stats?.wpm} WPM with ${stats?.accuracy}% accuracy.`
+                  : 'Type the words below as fast and accurately as you can. You have 60 seconds.'}
               </p>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-2xl p-6 sm:p-8 mb-6">
-            <div className="flex flex-wrap gap-2 mb-6 text-lg sm:text-xl leading-relaxed">
-              {words.map((word, i) => renderWord(word, i))}
+          <div className={`rounded-2xl p-6 sm:p-8 mb-6 ${dark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+            {!started && !finished && (
+              <div className="text-center py-8">
+                <p className={`text-lg mb-4 ${textSecondary}`}>Click here or press any key to start</p>
+                <p className={`text-sm ${textSecondary}`}>60 second time limit</p>
+              </div>
+            )}
+
+            <div
+              className={`text-lg sm:text-xl leading-relaxed mb-6 min-h-[120px] ${dark ? 'text-gray-300' : ''}`}
+              onClick={() => inputRef.current?.focus()}
+            >
+              {words.slice(0, wordIndex + 10).map((word, i) => renderWord(word, i))}
             </div>
 
             <input
@@ -329,30 +384,40 @@ function TypingTest() {
               type="text"
               value={input}
               onChange={handleChange}
-              onKeyDown={handleKeyDown}
+              onKeyDown={handleKeyDownLocal}
               disabled={finished}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck="false"
-              className="w-full px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:bg-gray-100"
+              className={`w-full px-4 py-3 text-lg border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-50 ${inputBg}`}
               placeholder={finished ? 'Finished!' : 'Start typing here...'}
             />
 
             <div className="flex items-center justify-between mt-4 text-sm text-gray-500">
-              <span>{Math.min(wordIndex + 1, words.length)} / {words.length} words</span>
-              <span>{finished ? 'Done' : `${liveSeconds}s | ${liveWpm} WPM`}</span>
+              <span>{wordIndex} words</span>
+              <span>{finished ? 'Done' : `${60 - liveSeconds}s | ${liveWpm} WPM`}</span>
             </div>
 
             {liveSeconds > 0 && !finished && renderChart()}
 
             {finished && stats && (
-              <div className="mt-6 space-y-3">
-                <div className="bg-white rounded-2xl p-5 shadow-sm">
+              <div className="mt-6 space-y-3 animate-fadeIn">
+                <div className={`rounded-2xl p-5 shadow-sm ${resultBg}`}>
                   <div className="text-3xl font-bold text-brand-600 mb-1">{stats.wpm} WPM</div>
-                  <p className="text-sm text-gray-500">
+                  <p className={`text-sm ${textSecondary}`}>
                     {stats.words} words in {stats.seconds}s
                   </p>
+                </div>
+                <div className={`grid grid-cols-2 gap-3`}>
+                  <div className={`rounded-2xl p-4 ${resultBg}`}>
+                    <div className={`text-xl font-bold ${textPrimary}`}>{stats.accuracy}%</div>
+                    <div className={`text-xs ${textSecondary}`}>Accuracy</div>
+                  </div>
+                  <div className={`rounded-2xl p-4 ${resultBg}`}>
+                    <div className={`text-xl font-bold ${textPrimary}`}>{stats.rawWpm}</div>
+                    <div className={`text-xs ${textSecondary}`}>Raw WPM</div>
+                  </div>
                 </div>
                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold ${stats.badge.color}`}>
                   {stats.badge.label}
@@ -361,20 +426,12 @@ function TypingTest() {
             )}
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button onClick={() => reset(25)} className="btn-secondary">
-              25 words
-            </button>
-            <button onClick={() => reset(50)} className="btn-primary">
-              50 words
-            </button>
-            <button onClick={() => reset(100)} className="btn-secondary">
-              100 words
-            </button>
-          </div>
+          <button onClick={reset} className="btn-secondary">
+            Try Again
+          </button>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
